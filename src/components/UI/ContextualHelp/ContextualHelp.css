@@ -1,0 +1,389 @@
+/* Contextual Help Styles */
+.contextual-help-trigger {
+  display: inline-block;
+  position: relative;
+}
+
+.contextual-help-trigger[role="button"] {
+  cursor: pointer;
+}
+
+.contextual-help-trigger:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Help Icon */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  cursor: help;
+  transition: all 0.2s ease;
+  font-style: normal;
+  user-select: none;
+}
+
+.help-icon:hover {
+  background: #d1d5db;
+  color: #374151;
+  transform: scale(1.1);
+}
+
+.help-icon.sm {
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.625rem;
+}
+
+.help-icon.md {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.75rem;
+}
+
+.help-icon.lg {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.875rem;
+}
+
+/* Tooltip */
+.contextual-help-tooltip {
+  max-width: 320px;
+  min-width: 240px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  animation: fadeInScale 0.2s ease-out;
+  z-index: 1000;
+}
+
+.help-tooltip-content {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* Tooltip Header */
+.help-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.help-tooltip-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.25;
+}
+
+.help-tooltip-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-tooltip-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.help-tooltip-close:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Tooltip Body */
+.help-tooltip-body {
+  padding: 1rem;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.help-tooltip-body p {
+  margin: 0 0 0.75rem 0;
+}
+
+.help-tooltip-body p:last-child {
+  margin-bottom: 0;
+}
+
+.help-tooltip-body ul,
+.help-tooltip-body ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.help-tooltip-body li {
+  margin: 0.25rem 0;
+}
+
+.help-tooltip-body strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.help-tooltip-body code {
+  background: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: #1f2937;
+}
+
+.help-tooltip-body a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.help-tooltip-body a:hover {
+  color: #2563eb;
+}
+
+/* Tooltip Footer */
+.help-tooltip-footer {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.related-topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.related-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.related-topic-link {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.related-topic-link:hover {
+  color: #2563eb;
+}
+
+.related-topic-link:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Animations */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contextual-help-tooltip {
+    max-width: 90vw;
+    min-width: 280px;
+  }
+  
+  .help-tooltip-header {
+    padding: 0.75rem 0.75rem 0.5rem;
+  }
+  
+  .help-tooltip-body {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .help-tooltip-footer {
+    padding: 0.5rem 0.75rem 0.75rem;
+  }
+  
+  .related-topics {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .contextual-help-tooltip {
+    border: 2px solid #000000;
+  }
+  
+  .help-icon {
+    border: 1px solid #000000;
+  }
+  
+  .help-tooltip-close {
+    border: 1px solid #000000;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .contextual-help-tooltip {
+    animation: none;
+  }
+  
+  .help-icon,
+  .help-tooltip-close {
+    transition: none;
+  }
+  
+  .help-icon:hover {
+    transform: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .contextual-help-tooltip {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .help-tooltip-header {
+    background: #111827;
+    border-color: #374151;
+  }
+  
+  .help-tooltip-title {
+    color: #f9fafb;
+  }
+  
+  .help-tooltip-close {
+    color: #9ca3af;
+  }
+  
+  .help-tooltip-close:hover {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .help-tooltip-body {
+    color: #d1d5db;
+  }
+  
+  .help-tooltip-body strong {
+    color: #f9fafb;
+  }
+  
+  .help-tooltip-body code {
+    background: #374151;
+    color: #e5e7eb;
+  }
+  
+  .help-tooltip-footer {
+    background: #111827;
+    border-color: #374151;
+  }
+  
+  .related-label {
+    color: #9ca3af;
+  }
+  
+  .help-icon {
+    background: #374151;
+    color: #9ca3af;
+  }
+  
+  .help-icon:hover {
+    background: #4b5563;
+    color: #d1d5db;
+  }
+}
+
+/* Focus trap for accessibility */
+.contextual-help-tooltip:focus-within {
+  outline: none;
+}
+
+/* Ensure tooltip content is accessible */
+.help-tooltip-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.help-tooltip-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.help-tooltip-body th,
+.help-tooltip-body td {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.help-tooltip-body th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+/* Loading state for dynamic content */
+.help-tooltip-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.help-tooltip-loading::after {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
