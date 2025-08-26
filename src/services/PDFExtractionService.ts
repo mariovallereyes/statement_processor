@@ -8,11 +8,8 @@ import {
   TextQualityMetrics 
 } from '../utils/textPreprocessingUtils';
 
-// Configure PDF.js worker - use local worker for offline functionality
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+// Configure PDF.js worker - use bundled worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}/pdf.worker.min.js`;
 
 export interface PDFExtractionOptions {
   useOCRFallback?: boolean;
