@@ -96,8 +96,8 @@ export class TransactionExtractionService {
     const textQuality = assessTextQuality(normalizedText);
     const baseConfidence = calculateTextConfidence(textQuality);
 
-    // Split text into lines for processing
-    const lines = normalizedText.split('\n').filter(line => line.trim().length > 0);
+    // Enhanced line splitting - detect transaction boundaries even without proper line breaks
+    const lines = this.intelligentLineSplitting(normalizedText);
     
     const transactions: Transaction[] = [];
     const processingMetadata = {
@@ -741,17 +741,148 @@ export class TransactionExtractionService {
   }
 
   /**
+   * Intelligently split text into transaction lines, detecting boundaries
+   * even when PDF extraction doesn't provide proper line breaks
+   */
+  private intelligentLineSplitting(text: string): string[] {
+    // First try normal line splitting
+    let lines = text.split('\n').filter(line => line.trim().length > 0);
+    
+    // If we have very few lines but lots of text, we likely have boundary issues
+    const averageLineLength = text.length / lines.length;
+    const hasLongLines = lines.some(line => line.length > 200);
+    
+    if (hasLongLines || averageLineLength > 150) {
+      // Process each long line to find transaction boundaries
+      const enhancedLines: string[] = [];
+      
+      for (const line of lines) {
+        if (line.length > 200) {
+          // This line likely contains multiple transactions
+          const splitTransactions = this.splitLineIntoTransactions(line);
+          enhancedLines.push(...splitTransactions);
+        } else {
+          enhancedLines.push(line);
+        }
+      }
+      
+      lines = enhancedLines;
+    }
+    
+    return lines.filter(line => line.trim().length > 0);
+  }
+  
+  /**
+   * Split a long line containing multiple transactions into individual transaction lines
+   */
+  private splitLineIntoTransactions(longLine: string): string[] {
+    const transactions: string[] = [];
+    
+    // Enhanced Bank of America transaction boundary patterns
+    const boundaryPatterns = [
+      // CHECKCARD transactions - capture everything until next transaction type
+      /\b(CHECKCARD\s+\d{4}\s+[^C]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL\s+DES:|\s*Deel,\s+Inc\.|$)/g,
+      // PURCHASE transactions
+      /\b(PURCHASE\s+\d{4}\s+[^P]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL\s+DES:|\s*Deel,\s+Inc\.|$)/g,
+      // PAYPAL transactions
+      /\b(PAYPAL\s+DES:[^P]+?)(?=\s*PAYPAL\s+DES:|\s*CHECKCARD|\s*PURCHASE|\s*Deel,\s+Inc\.|$)/g,
+      // Deel transactions
+      /(Deel,\s+Inc\.\s+DES:[^D]+?)(?=\s*Deel,\s+Inc\.|\s*PAYPAL|\s*CHECKCARD|\s*AMERICAN\s+EXPRESS|$)/g,
+      // AMERICAN EXPRESS transactions
+      /(AMERICAN\s+EXPRESS\s+DES:[^A]+?)(?=\s*AMERICAN\s+EXPRESS|\s*CHECKCARD|\s*PURCHASE|\s*Card\s+account|$)/g,
+      // Wire transfers
+      /(WIRE\s+TYPE:[^W]+?)(?=\s*WIRE\s+TYPE:|\s*Zelle\s+Transfer|$)/g,
+      // Zelle transfers
+      /(Zelle\s+Transfer\s+Conf#[^;]+;[^Z]+?)(?=\s*Zelle\s+Transfer|\s*STRIPE|\s*WIRE\s+TYPE|$)/g,
+      // STRIPE transfers
+      /(STRIPE\s+DES:[^S]+?)(?=\s*STRIPE\s+DES:|\s*Zelle\s+Transfer|$)/g,
+      // Online Banking transfers
+      /(Online\s+Banking\s+transfer[^O]+?)(?=\s*Online\s+Banking\s+transfer|\s*PAYPAL|$)/g,
+      // RECURRING transactions
+      /(RECURRING\s+[^R]+?)(?=\s*RECURRING|\s*CHECKCARD|\s*PURCHASE|$)/g,
+      // PMNT SENT transactions
+      /(PMNT\s+SENT\s+[^P]+?)(?=\s*PMNT\s+SENT|\s*CHECKCARD|\s*PURCHASE|$)/g
+    ];
+    
+    let remainingText = longLine.trim();
+    let processed = false;
+    
+    // Try each pattern to extract transactions
+    for (const pattern of boundaryPatterns) {
+      pattern.lastIndex = 0;
+      let matches;
+      
+      while ((matches = pattern.exec(longLine)) !== null) {
+        const transaction = matches[1].trim();
+        if (transaction && transaction.length > 10) { // Minimum viable transaction length
+          transactions.push(transaction);
+          processed = true;
+        }
+      }
+    }
+    
+    // If no patterns matched, try simpler splitting approaches
+    if (!processed) {
+      // Look for date patterns that might indicate transaction starts
+      const datePattern = /\b(\d{4})\s+/g;
+      const dateSplits = longLine.split(datePattern);
+      
+      if (dateSplits.length > 2) {
+        // Recombine date with following text
+        for (let i = 1; i < dateSplits.length; i += 2) {
+          if (i + 1 < dateSplits.length) {
+            const possibleTransaction = dateSplits[i] + ' ' + dateSplits[i + 1];
+            if (possibleTransaction.trim().length > 20) {
+              transactions.push(possibleTransaction.trim());
+            }
+          }
+        }
+        processed = true;
+      }
+    }
+    
+    // Fallback: if nothing worked, return the original line but try to identify obvious breaks
+    if (!processed) {
+      // Look for obvious separators like card numbers or common keywords
+      const fallbackSplits = longLine.split(/\s+(?=(?:XXXX\s+XXXX|Card\s+account|Total\s+))/g);
+      if (fallbackSplits.length > 1) {
+        transactions.push(...fallbackSplits.filter(t => t.trim().length > 10));
+      } else {
+        transactions.push(longLine);
+      }
+    }
+    
+    return transactions;
+  }
+
+  /**
    * Determine if a line should be skipped during processing
    */
   private shouldSkipLine(line: string): boolean {
     const skipPatterns = [
+      // Account headers and footers
       /^(ACCOUNT|STATEMENT|BALANCE|TOTAL|SUBTOTAL)/i,
       /^(PAGE|CONTINUED|PREVIOUS|NEXT)/i,
       /^(BANK OF AMERICA|MEMBER FDIC)/i,
       /^[-=*\s]+$/, // Lines with only separators
       /^\s*$/, // Empty lines
-      /^(DEPOSITS|WITHDRAWALS|CHECKS|FEES)/i,
-      /^(BEGINNING|ENDING)\s+(BALANCE|TOTAL)/i
+      /^(DEPOSITS|WITHDRAWALS|CHECKS|FEES)\s+(and\s+other\s+)?(credits|debits)/i,
+      /^(BEGINNING|ENDING)\s+(BALANCE|TOTAL)/i,
+      // Bank statement headers
+      /^[A-Z\s]+LLC\s*!\s*Account\s*#/i, // Company name + account header
+      /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,\s+\d{4}\s+to\s+/i, // Date range headers
+      /^Your\s+(checking|savings)\s+account\s*Page\s*\d+\s*of\s*\d+/i, // Page headers
+      /^Page\s*\d+\s*of\s*\d+/i,
+      // Section headers
+      /^Date\s+(Transaction\s+)?[Dd]escription\s+Amount$/i,
+      /^Date\s+Description\s+Amount$/i,
+      /^Service\s+fees$/i,
+      /^Daily\s+ledger\s+balances$/i,
+      // Subtotal lines
+      /^Subtotal\s+for\s+card\s+account/i,
+      /^Total\s+(deposits|withdrawals|service\s+fees)/i,
+      // Lines that are clearly not transactions
+      /continued\s+on\s+the\s+next\s+page/i
     ];
 
     return skipPatterns.some(pattern => pattern.test(line));
