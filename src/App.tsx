@@ -8,6 +8,7 @@ import {
   DuplicateDetection
 } from './components';
 import { ErrorDisplay } from './components/ErrorHandling/ErrorDisplay';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import {
   UploadResult,
   Transaction,
@@ -765,12 +766,14 @@ function App() {
           {/* File Upload Section */}
           {currentWorkflowState === 'initial' && (
             <div className="upload-section">
-              <FileUpload
-                onFileSelect={handleFileSelect}
-                onError={handleError}
-                acceptedFormats={['.pdf', '.csv']}
-                disabled={false}
-              />
+              <ErrorBoundary>
+                <FileUpload
+                  onFileSelect={handleFileSelect}
+                  onError={handleError}
+                  acceptedFormats={['.pdf', '.csv']}
+                  disabled={false}
+                />
+              </ErrorBoundary>
             </div>
           )}
 
