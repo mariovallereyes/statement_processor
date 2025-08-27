@@ -27,8 +27,8 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   };
 
   const formatAmount = (amount: number) => {
-    const formatted = Math.abs(amount).toFixed(2);
-    return amount >= 0 ? `+$${formatted}` : `-$${formatted}`;
+    const formatted = amount.toFixed(2);
+    return amount >= 0 ? `+$${formatted}` : `$${formatted}`;
   };
 
   const getConfidenceLevel = (confidence: number): 'high' | 'medium' | 'low' => {
