@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import React, { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
 import { FileUploadServiceImpl } from '../../services/FileUploadService';
 import { UploadResult } from '../../models';
 import './FileUpload.css';
@@ -24,6 +24,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   maxFileSize = 50 * 1024 * 1024, // 50MB
   disabled = false
 }) => {
+  // Aggressive protection against extension interference
+  const [forceVisible, setForceVisible] = useState(true);
+  
+  useEffect(() => {
+    // Force visibility check every 2 seconds
+    const visibilityCheck = setInterval(() => {
+      setForceVisible(prev => !prev);
+      setTimeout(() => setForceVisible(prev => !prev), 50);
+    }, 2000);
+    
+    return () => clearInterval(visibilityCheck);
+  }, []);
   const [uploadState, setUploadState] = useState<UploadState>({
     isDragOver: false,
     isUploading: false,

@@ -11,6 +11,7 @@ import { ErrorDisplay } from './components/ErrorHandling/ErrorDisplay';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ExtensionGuard } from './components/ExtensionGuard/ExtensionGuard';
 import { FallbackFileUpload } from './components/FileUpload/FallbackFileUpload';
+import { ExtensionProofUpload } from './components/FileUpload/ExtensionProofUpload';
 import {
   UploadResult,
   Transaction,
@@ -768,29 +769,11 @@ function App() {
           {/* File Upload Section */}
           {currentWorkflowState === 'initial' && (
             <div className="upload-section">
-              <ErrorBoundary>
-                <ExtensionGuard
-                  componentName="FileUpload"
-                  fallback={
-                    <FallbackFileUpload
-                      onFileSelect={handleFileSelect}
-                      onError={handleError}
-                      acceptedFormats={['.pdf', '.csv']}
-                    />
-                  }
-                  onRecovery={() => {
-                    // Force component refresh
-                    setCurrentWorkflowState('initial');
-                  }}
-                >
-                  <FileUpload
-                    onFileSelect={handleFileSelect}
-                    onError={handleError}
-                    acceptedFormats={['.pdf', '.csv']}
-                    disabled={false}
-                  />
-                </ExtensionGuard>
-              </ErrorBoundary>
+              <ExtensionProofUpload
+                onFileSelect={handleFileSelect}
+                onError={handleError}
+                acceptedFormats={['.pdf', '.csv']}
+              />
             </div>
           )}
 
