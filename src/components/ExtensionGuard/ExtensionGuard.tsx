@@ -31,7 +31,7 @@ export const ExtensionGuard: React.FC<ExtensionGuardProps> = ({
   const [showFallback, setShowFallback] = useState(false);
   const [detectedExtensions, setDetectedExtensions] = useState<string[]>([]);
   const componentRef = useRef<HTMLDivElement>(null);
-  const healthCheckInterval = useRef<NodeJS.Timeout>();
+  const healthCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Detect problematic browser extensions
   useEffect(() => {
