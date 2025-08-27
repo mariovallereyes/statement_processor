@@ -21,6 +21,38 @@ export class EnhancedTransactionClassificationService {
   }
 
   /**
+   * Enhanced merchant pattern recognition for better accuracy
+   */
+  private recognizeMerchantPatterns(description: string): { category: string; confidence: number } | null {
+    const patterns = [
+      // Transportation
+      { patterns: ['BIRD*', 'BOLT.EU', 'UBER', 'LYFT'], category: 'Transportation', confidence: 0.95 },
+      // Money Transfer
+      { patterns: ['REMITLY', 'WESTERN UNION', 'MONEYGRAM', 'WISE'], category: 'Transfer', confidence: 0.95 },
+      // Software/Business
+      { patterns: ['WIX.COM', 'GOOGLE', 'MICROSOFT', 'ADOBE'], category: 'Business/Software', confidence: 0.9 },
+      // Banking/Fees
+      { patterns: ['INTERNATIONAL TRANSACTION FEE', 'WIRE TRANSFER FEE', 'ATM FEE'], category: 'Banking/Fees', confidence: 0.95 },
+      // Food & Dining
+      { patterns: ['JACK IN THE BOX', 'MCDONALDS', 'STARBUCKS'], category: 'Food & Dining', confidence: 0.9 },
+      // Telecommunications
+      { patterns: ['HUSHED'], category: 'Phone/Internet', confidence: 0.85 }
+    ];
+
+    const upperDesc = description.toUpperCase();
+    
+    for (const group of patterns) {
+      for (const pattern of group.patterns) {
+        if (upperDesc.includes(pattern)) {
+          return { category: group.category, confidence: group.confidence };
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
    * Classify transaction with AI model fallback
    */
   public async classifyTransaction(transaction: Transaction): Promise<ClassificationResult> {
@@ -45,8 +77,18 @@ export class EnhancedTransactionClassificationService {
     try {
       let result: ClassificationResult;
 
-      if (this.aiModelAvailable && !this.fallbackMode) {
-        // Try AI classification first
+      // First try enhanced pattern recognition
+      const patternResult = this.recognizeMerchantPatterns(transaction.description);
+      if (patternResult && patternResult.confidence > 0.8) {
+        result = {
+          transactionId: transaction.id,
+          category: patternResult.category,
+          subcategory: '',
+          confidence: patternResult.confidence,
+          reasoning: `Matched merchant pattern: ${patternResult.category}`
+        };
+      } else if (this.aiModelAvailable && !this.fallbackMode) {
+        // Try AI classification second
         result = await this.classifyWithAI(transaction, context);
       } else {
         // Use rule-based classification

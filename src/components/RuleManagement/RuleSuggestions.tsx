@@ -104,7 +104,10 @@ export const RuleSuggestions: React.FC<RuleSuggestionsProps> = ({
               </div>
               <div className="suggestion-actions">
                 <button
-                  onClick={() => onAccept(suggestion.id)}
+                  onClick={() => {
+                    console.log('Accept button clicked for suggestion:', suggestion.id);
+                    onAccept(suggestion.id);
+                  }}
                   className="accept-button"
                   aria-label={`Accept suggestion: ${suggestion.name}`}
                 >

@@ -38,6 +38,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = ({
         ruleService.analyzeCorrectionsForRuleSuggestions()
       ]);
       
+      console.log('Loaded rules:', loadedRules.length);
+      console.log('Loaded suggestions:', loadedSuggestions.length, loadedSuggestions);
+      
       setRules(loadedRules);
       setSuggestions(loadedSuggestions);
     } catch (err) {
@@ -96,13 +99,19 @@ export const RuleManagement: React.FC<RuleManagementProps> = ({
   };
 
   const handleAcceptSuggestion = async (suggestionId: string) => {
+    console.log('Accepting suggestion:', suggestionId);
     try {
       setError(null);
       const newRule = await ruleService.acceptRuleSuggestion(suggestionId);
+      console.log('New rule created:', newRule);
       if (newRule) {
         setRules(prev => [...prev, newRule]);
         setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
         onRulesChanged?.();
+        console.log('Rule accepted successfully');
+      } else {
+        console.warn('acceptRuleSuggestion returned null');
+        setError('Failed to create rule from suggestion');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to accept suggestion');
