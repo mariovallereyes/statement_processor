@@ -1,0 +1,141 @@
+.extension-guard-wrapper {
+  position: relative;
+}
+
+.extension-guard-fallback {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 2px solid #ffa500;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.extension-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.extension-warning h3 {
+  margin: 0 0 12px 0;
+  color: #856404;
+  font-size: 18px;
+}
+
+.extension-warning p {
+  margin: 8px 0;
+  color: #856404;
+}
+
+.extension-warning ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.extension-warning li {
+  margin: 4px 0;
+  color: #856404;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.recovery-panel {
+  background: white;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recovery-panel h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.recovery-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.recovery-btn {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #555;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.recovery-btn:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.recovery-btn.primary {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.recovery-btn.primary:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.simple-fallback {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.troubleshooting {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.troubleshooting summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+  padding: 4px 0;
+}
+
+.troubleshooting ul {
+  margin: 12px 0 4px 0;
+  padding-left: 20px;
+}
+
+.troubleshooting li {
+  margin: 6px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .extension-guard-fallback {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  .recovery-buttons {
+    flex-direction: column;
+  }
+  
+  .recovery-btn {
+    width: 100%;
+  }
+}

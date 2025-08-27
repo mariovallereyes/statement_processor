@@ -1,0 +1,112 @@
+.fallback-file-upload {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.fallback-file-upload .upload-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.fallback-file-upload .upload-header h3 {
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.fallback-file-upload .upload-header p {
+  color: #666;
+  margin: 0;
+  font-size: 14px;
+}
+
+.fallback-file-upload .upload-area {
+  border: 3px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.fallback-file-upload .upload-area:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.fallback-file-upload .upload-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.fallback-file-upload .upload-text strong {
+  color: #007bff;
+  font-size: 18px;
+}
+
+.fallback-file-upload .upload-text small {
+  color: #666;
+  font-size: 12px;
+}
+
+.fallback-file-upload .upload-methods {
+  margin: 20px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 6px;
+}
+
+.fallback-file-upload .upload-methods h4 {
+  margin: 0 0 12px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.fallback-file-upload .upload-methods ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.fallback-file-upload .upload-methods li {
+  margin: 6px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.fallback-file-upload .format-info {
+  margin-top: 16px;
+}
+
+.fallback-file-upload .format-info details {
+  background: white;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.fallback-file-upload .format-info summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+}
+
+.fallback-file-upload .format-info ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.fallback-file-upload .format-info li {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .fallback-file-upload {
+    margin: 10px;
+    padding: 16px;
+  }
+}
