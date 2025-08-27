@@ -26,9 +26,9 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
     return new Date(date).toLocaleDateString();
   };
 
-  const formatAmount = (amount: number) => {
-    const formatted = amount.toFixed(2);
-    return amount >= 0 ? `+$${formatted}` : `$${formatted}`;
+  const formatAmount = (amount: number, type: 'debit' | 'credit') => {
+    const formatted = Math.abs(amount).toFixed(2);
+    return type === 'credit' ? `+$${formatted}` : `-$${formatted}`;
   };
 
   const getConfidenceLevel = (confidence: number): 'high' | 'medium' | 'low' => {
@@ -86,8 +86,8 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
         
         <div className="transaction-basic-info">
           <div className="transaction-date">{formatDate(transaction.date)}</div>
-          <div className={`transaction-amount ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
-            {formatAmount(transaction.amount)}
+          <div className={`transaction-amount ${transaction.type}`}>
+            {formatAmount(transaction.amount, transaction.type)}
           </div>
         </div>
 
