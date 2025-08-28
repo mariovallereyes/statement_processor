@@ -177,7 +177,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
               console.log('ClassificationResult:', classificationResult);
               return {
                 category: classificationResult.category,
-                subcategory: classificationResult.subcategory,
+                subcategory: classificationResult.subcategory || undefined,
                 confidence: classificationResult.confidence
               };
             })() : undefined}

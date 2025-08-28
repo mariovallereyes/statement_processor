@@ -343,12 +343,7 @@ LIABILITIES:
 MISCELLANEOUS:
 • Other Expenses: Depreciation, Bad Debt, Charitable Contributions, Dues & Subscriptions, Uniforms, Miscellaneous, Uncategorized Expense
 
-CLASSIFICATION GUIDELINES:
-- PAYROLL: Use "Payroll Expenses" with appropriate subcategory for all employee wages, taxes, benefits, contractor payments, freelancer payments
-- OWNER TRANSACTIONS: Use "Owner's Equity" for owner draws, distributions, investments, capital contributions
-- PROFESSIONAL SERVICES: Accounting, legal, consulting, tax prep, financial advisory services
-- OFFICE SUPPLIES: Stationery, software subscriptions, computer equipment, telephone services
-- BUSINESS EXPENSES: All legitimate business operating costs should be categorized appropriately rather than "Other Expenses"
+CRITICAL: Always provide BOTH category AND subcategory for every transaction.
 
 TRANSACTIONS TO CLASSIFY:
 ${transactionsToAnalyze}
