@@ -396,6 +396,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
 
   const handleApplyAISuggestion = () => {
     if (aiSuggestion) {
+      console.log('Applying AI suggestion:', aiSuggestion);
       onChange(aiSuggestion.category, aiSuggestion.subcategory);
     }
   };

@@ -66,6 +66,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   };
 
   const handleCategoryChange = (category: string, subcategory?: string) => {
+    console.log('handleCategoryChange called:', { category, subcategory });
     if (isEditing) {
       setEditedTransaction(prev => ({ ...prev, category, subcategory }));
     } else {
@@ -172,11 +173,14 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
             selectedSubcategory={isEditing ? editedTransaction.subcategory : transaction.subcategory}
             onChange={handleCategoryChange}
             disabled={!isEditing && transaction.userValidated}
-            aiSuggestion={classificationResult && !transaction.userValidated ? {
-              category: classificationResult.category,
-              subcategory: classificationResult.subcategory,
-              confidence: classificationResult.confidence
-            } : undefined}
+            aiSuggestion={classificationResult && !transaction.userValidated ? (() => {
+              console.log('ClassificationResult:', classificationResult);
+              return {
+                category: classificationResult.category,
+                subcategory: classificationResult.subcategory,
+                confidence: classificationResult.confidence
+              };
+            })() : undefined}
           />
         </div>
 
