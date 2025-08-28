@@ -22,15 +22,49 @@ export class EnhancedTransactionClassificationService {
 
   /**
    * Real AI classification using OpenAI
+   * CRITICAL: Must understand transaction types and merchant logic
    */
   private async classifyWithAI(transaction: Transaction, context?: any): Promise<ClassificationResult> {
-    const prompt = `Classify this bank transaction into a category:
-Transaction: ${transaction.description}
-Amount: ${transaction.amount < 0 ? '-' : '+'}$${Math.abs(transaction.amount).toFixed(2)}
+    const transactionType = transaction.type || (transaction.amount < 0 ? 'debit' : 'credit');
+    const isExpense = transactionType === 'debit' || transaction.amount < 0;
+    
+    const prompt = `You are an expert financial transaction classifier. Classify this bank transaction using QuickBooks categories.
 
-Categories: Transportation, Transfer, Business/Software, Business/Marketing, Banking/Fees, Food & Dining, Shopping, Recurring/Subscription, Income/Deposit, Healthcare, Entertainment, Utilities, Other
+CRITICAL RULES:
+1. CHECKCARD, PURCHASE, WITHDRAWAL transactions are ALWAYS expenses, NEVER deposits/income
+2. SUPERCUTS = hair salon = Personal Care expense
+3. Debit amounts (negative) are expenses, Credit amounts (positive) are usually income/deposits
+4. Look at the merchant name to determine specific category
 
-Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning": ["explanation"]}`;
+Transaction Details:
+- Description: ${transaction.description}
+- Amount: ${transaction.amount < 0 ? '-' : '+'}$${Math.abs(transaction.amount).toFixed(2)}
+- Transaction Type: ${transactionType} (${isExpense ? 'EXPENSE' : 'INCOME/CREDIT'})
+
+Available Categories:
+- Income: Actual income, payroll, interest earned
+- Cost of Goods Sold: Materials, parts, subcontractor services
+- Payroll Expenses: Salaries, wages, contractor payments
+- Professional Services: Legal, accounting, consulting fees
+- Office Expenses: Supplies, software, equipment
+- Marketing & Advertising: Advertising, promotional materials
+- Travel & Entertainment: Meals, gas, lodging, personal care (haircuts)
+- Utilities: Phone, internet, electricity, water
+- Insurance: Business insurance premiums
+- Rent & Lease: Office rent, equipment leases
+- Maintenance & Repairs: Building/equipment maintenance
+- Banking & Financial: Bank fees, wire fees, interest expense
+- Taxes & Licenses: Business taxes, licenses, permits
+- Education & Training: Training, conferences, books
+- Other Expenses: Miscellaneous business expenses
+
+EXAMPLES:
+- "CHECKCARD SUPERCUTS" → Travel & Entertainment (personal care/haircuts)
+- "CHECKCARD MCDONALDS" → Travel & Entertainment (meals)
+- "DIRECT DEPOSIT PAYROLL" → Income
+- "WIRE TRANSFER FEE" → Banking & Financial
+
+Respond with JSON: {"category": "category_name", "subcategory": "specific_subcategory", "confidence": 0.95, "reasoning": ["explanation"]}`;
 
     try {
       // Use fetch to call OpenAI API directly (client-side)
@@ -43,7 +77,7 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
         body: JSON.stringify({
           model: 'gpt-5-mini',
           messages: [{ role: 'user', content: prompt }],
-          max_completion_tokens: 150
+          max_completion_tokens: 200
         })
       });
 
@@ -55,6 +89,7 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
       return {
         transactionId: transaction.id,
         category: aiResult.category,
+        subcategory: aiResult.subcategory,
         confidence: aiResult.confidence,
         reasoning: aiResult.reasoning,
         suggestedRules: []
@@ -101,49 +136,92 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
 
   /**
    * Enhanced merchant pattern recognition for better accuracy
+   * CRITICAL: Must enforce transaction type logic (CHECKCARD = EXPENSE)
    */
   private recognizeMerchantPatterns(description: string): { category: string; confidence: number } | null {
-    const patterns = [
-      // Bank of America specific transfers and internal transactions
-      { patterns: ['ZELLE TRANSFER'], category: 'Transfer', confidence: 0.98 },
-      { patterns: ['ONLINE BANKING TRANSFER'], category: 'Transfer', confidence: 0.98 },
-      { patterns: ['PMNT SENT'], category: 'Transfer', confidence: 0.95 },
-      
-      // Bank of America recurring charges
-      { patterns: ['RECURRING CKCD'], category: 'Recurring/Subscription', confidence: 0.85 },
-      
-      // Banking fees - highest confidence
-      { patterns: ['INTERNATIONAL TRANSACTION FEE', 'WIRE TRANSFER FEE', 'ATM FEE'], category: 'Banking/Fees', confidence: 0.98 },
-      
-      // Transportation services
-      { patterns: ['BIRD*', 'BOLT.EU', 'UBER', 'LYFT'], category: 'Transportation', confidence: 0.95 },
-      
-      // Money Transfer Services
-      { patterns: ['REMITLY', 'WESTERN UNION', 'MONEYGRAM', 'WISE'], category: 'Transfer', confidence: 0.95 },
-      
-      // Software/Business services
-      { patterns: ['WIX.COM', 'GOOGLE', 'MICROSOFT', 'ADOBE'], category: 'Business/Software', confidence: 0.9 },
-      { patterns: ['HUSHED'], category: 'Business/Software', confidence: 0.9 },
-      { patterns: ['GCS LEADSALES'], category: 'Business/Marketing', confidence: 0.9 },
-      
-      // Food & Dining
-      { patterns: ['JACK IN THE BOX', 'MCDONALDS', 'STARBUCKS'], category: 'Food & Dining', confidence: 0.9 }
-    ];
-
     const upperDesc = description.toUpperCase();
     
+    // FIRST: Enforce fundamental transaction type rules
+    if (upperDesc.includes('CHECKCARD') || upperDesc.includes('PURCHASE') || upperDesc.includes('WITHDRAWAL')) {
+      // These are ALWAYS expenses, never deposits
+      const merchantSpecificPatterns = [
+        // Personal Care & Beauty
+        { patterns: ['SUPERCUTS', 'GREAT CLIPS', 'SPORT CLIPS', 'HAIR CUTTERY', 'SALON'], category: 'Other Expenses', confidence: 0.95 },
+        { patterns: ['CVS', 'WALGREENS', 'RITE AID'], category: 'Healthcare', confidence: 0.9 },
+        
+        // Food & Dining
+        { patterns: ['MCDONALDS', 'BURGER KING', 'TACO BELL', 'KFC', 'SUBWAY', 'STARBUCKS', 'DUNKIN'], category: 'Travel & Entertainment', confidence: 0.95 },
+        { patterns: ['JACK IN THE BOX', 'CHIPOTLE', 'PANERA'], category: 'Travel & Entertainment', confidence: 0.95 },
+        
+        // Retail & Shopping
+        { patterns: ['WALMART', 'TARGET', 'COSTCO', 'AMAZON', 'HOME DEPOT', 'LOWES'], category: 'Office Expenses', confidence: 0.9 },
+        { patterns: ['BEST BUY', 'APPLE STORE', 'MICROSOFT STORE'], category: 'Office Expenses', confidence: 0.9 },
+        
+        // Gas Stations
+        { patterns: ['SHELL', 'EXXON', 'CHEVRON', 'BP', 'MOBIL', 'ARCO', '76'], category: 'Travel & Entertainment', confidence: 0.95 },
+        
+        // Grocery Stores
+        { patterns: ['SAFEWAY', 'KROGER', 'ALBERTSONS', 'TRADER JOES', 'WHOLE FOODS'], category: 'Travel & Entertainment', confidence: 0.9 },
+        
+        // Online Services
+        { patterns: ['PAYPAL', 'AMAZON.COM', 'EBAY'], category: 'Other Expenses', confidence: 0.85 },
+        
+        // Transportation
+        { patterns: ['UBER', 'LYFT', 'BIRD*', 'BOLT.EU'], category: 'Travel & Entertainment', confidence: 0.95 },
+        
+        // Utilities (when paid via checkcard)
+        { patterns: ['PG&E', 'EDISON', 'VERIZON', 'AT&T', 'COMCAST', 'XFINITY'], category: 'Utilities', confidence: 0.9 }
+      ];
+      
+      for (const group of merchantSpecificPatterns) {
+        for (const pattern of group.patterns) {
+          if (pattern.includes('*')) {
+            const regexPattern = pattern.replace(/\*/g, '.*');
+            const regex = new RegExp(regexPattern, 'i');
+            if (regex.test(upperDesc)) {
+              return { category: group.category, confidence: group.confidence };
+            }
+          } else {
+            if (upperDesc.includes(pattern)) {
+              return { category: group.category, confidence: group.confidence };
+            }
+          }
+        }
+      }
+      
+      // Default for any CHECKCARD/PURCHASE transaction
+      return { category: 'Other Expenses', confidence: 0.8 };
+    }
+    
+    // Standard patterns for non-checkcard transactions
+    const patterns = [
+      // Bank transfers and internal transactions
+      { patterns: ['ZELLE TRANSFER'], category: 'Banking & Financial', confidence: 0.98 },
+      { patterns: ['ONLINE BANKING TRANSFER'], category: 'Banking & Financial', confidence: 0.98 },
+      { patterns: ['PMNT SENT'], category: 'Banking & Financial', confidence: 0.95 },
+      
+      // Banking fees
+      { patterns: ['INTERNATIONAL TRANSACTION FEE', 'WIRE TRANSFER FEE', 'ATM FEE'], category: 'Banking & Financial', confidence: 0.98 },
+      
+      // Money Transfer Services
+      { patterns: ['REMITLY', 'WESTERN UNION', 'MONEYGRAM', 'WISE'], category: 'Banking & Financial', confidence: 0.95 },
+      
+      // Software/Business services (non-checkcard)
+      { patterns: ['WIX.COM', 'GOOGLE WORKSPACE', 'MICROSOFT 365', 'ADOBE'], category: 'Office Expenses', confidence: 0.9 },
+      
+      // Deposits and income
+      { patterns: ['DIRECT DEPOSIT', 'PAYROLL', 'SALARY', 'INTEREST PAID'], category: 'Income', confidence: 0.95 }
+    ];
+
     for (const group of patterns) {
       for (const pattern of group.patterns) {
-        // Handle special patterns with regex or wildcards
         if (pattern.includes('*')) {
-          // Convert wildcard to regex
           const regexPattern = pattern.replace(/\*/g, '.*');
           const regex = new RegExp(regexPattern, 'i');
           if (regex.test(upperDesc)) {
             return { category: group.category, confidence: group.confidence };
           }
         } else {
-          // Simple string inclusion
           if (upperDesc.includes(pattern)) {
             return { category: group.category, confidence: group.confidence };
           }
