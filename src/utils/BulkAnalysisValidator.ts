@@ -19,25 +19,31 @@ export interface ParsedGPTResponse {
  */
 export class BulkAnalysisValidator {
   private readonly VALID_CATEGORIES = [
-    'Transportation', 'Transfer', 'Business/Software', 'Business/Marketing', 
-    'Banking/Fees', 'Food & Dining', 'Shopping', 'Recurring/Subscription', 
-    'Income/Deposit', 'Healthcare', 'Entertainment', 'Utilities', 'Other'
+    'Income', 'Cost of Goods Sold', 'Payroll Expenses', 'Professional Services', 'Office Expenses',
+    'Marketing & Advertising', 'Travel & Entertainment', 'Utilities', 'Insurance', 'Rent & Lease',
+    'Maintenance & Repairs', 'Banking & Financial', 'Taxes & Licenses', 'Education & Training',
+    'Owner\'s Equity', 'Assets', 'Liabilities', 'Other Expenses'
   ];
 
   private readonly VALID_SUBCATEGORIES: Record<string, string[]> = {
-    'Transportation': ['Gas & Fuel', 'Public Transit', 'Rideshare/Taxi', 'Parking', 'Vehicle Maintenance', 'Other Transport'],
-    'Transfer': ['Account Transfer', 'Person-to-Person', 'Wire Transfer', 'Check Deposit', 'Other Transfer'],
-    'Business/Software': ['Software/SaaS', 'Development Tools', 'Cloud Services', 'Domain/Hosting', 'Business Apps', 'Other Business'],
-    'Business/Marketing': ['Advertising', 'Social Media', 'Email Marketing', 'Analytics', 'Design Tools', 'Other Marketing'],
-    'Banking/Fees': ['Account Fees', 'ATM Fees', 'Overdraft Fees', 'Wire Fees', 'Foreign Transaction', 'Other Bank Fees'],
-    'Food & Dining': ['Restaurants', 'Fast Food', 'Coffee Shops', 'Groceries', 'Delivery', 'Other Food'],
-    'Shopping': ['Retail', 'Online Shopping', 'Clothing', 'Electronics', 'Home & Garden', 'Other Shopping'],
-    'Recurring/Subscription': ['Streaming Services', 'Software Subscriptions', 'Utilities', 'Insurance', 'Memberships', 'Other Recurring'],
-    'Income/Deposit': ['Salary', 'Freelance', 'Investment Income', 'Refund', 'Government Payment', 'Other Income'],
-    'Healthcare': ['Medical', 'Dental', 'Pharmacy', 'Insurance', 'Therapy', 'Other Healthcare'],
-    'Entertainment': ['Movies', 'Gaming', 'Sports', 'Hobbies', 'Books/Media', 'Other Entertainment'],
-    'Utilities': ['Electric', 'Gas', 'Water', 'Internet', 'Phone', 'Trash/Recycling', 'Other Utilities'],
-    'Other': ['Uncategorized', 'Charity', 'Education', 'Travel', 'Personal Care', 'Other']
+    'Income': ['Sales Revenue', 'Service Revenue', 'Product Sales', 'Consulting Income', 'Interest Income', 'Dividend Income', 'Other Income', 'Uncategorized Income'],
+    'Cost of Goods Sold': ['Job Materials', 'Construction Materials', 'Subcontractor Services', 'Parts Purchases', 'Freight and Shipping', 'Equipment Rental', 'Media Purchases', 'Merchant Account Fees'],
+    'Payroll Expenses': ['Salaries & Wages', 'Employee Benefits', 'Payroll Taxes', 'Workers Compensation', 'Health Insurance', 'Retirement Plans', 'Contractor Payments', 'Freelancer Payments'],
+    'Professional Services': ['Accounting & Bookkeeping', 'Legal Fees', 'Consulting Fees', 'Tax Preparation', 'Financial Services', 'Business Coaching', 'Other Professional Fees'],
+    'Office Expenses': ['Office Supplies', 'Computer and Internet', 'Software Subscriptions', 'Printing & Reproduction', 'Postage and Delivery', 'Office Equipment', 'Telephone'],
+    'Marketing & Advertising': ['Advertising', 'Online Marketing', 'Print Marketing', 'Website & SEO', 'Trade Shows', 'Promotional Materials', 'Social Media Marketing'],
+    'Travel & Entertainment': ['Travel Expenses', 'Meals & Entertainment', 'Lodging', 'Business Meals', 'Transportation', 'Auto Expenses'],
+    'Utilities': ['Electricity', 'Gas', 'Water & Sewer', 'Internet', 'Phone', 'Waste Management', 'Security Services'],
+    'Insurance': ['General Liability', 'Professional Liability', 'Property Insurance', 'Auto Insurance', 'Health Insurance', 'Life Insurance', 'Disability Insurance'],
+    'Rent & Lease': ['Office Rent', 'Equipment Lease', 'Vehicle Lease', 'Storage Rent', 'Property Lease'],
+    'Maintenance & Repairs': ['Building Repairs', 'Equipment Maintenance', 'Vehicle Maintenance', 'Computer Repairs', 'Janitorial Services'],
+    'Banking & Financial': ['Bank Service Charges', 'Credit Card Fees', 'Interest Expense', 'Loan Payments', 'Investment Fees', 'Foreign Exchange'],
+    'Taxes & Licenses': ['Business Licenses', 'Property Taxes', 'Sales Tax', 'Payroll Taxes', 'Federal Taxes', 'State Taxes', 'Permits & Fees'],
+    'Education & Training': ['Continuing Education', 'Employee Training', 'Conferences & Seminars', 'Books & Publications', 'Online Courses', 'Professional Development'],
+    'Owner\'s Equity': ['Owner Investment', 'Owner Draw', 'Owner Distribution', 'Retained Earnings', 'Capital Contributions', 'Partner Distributions'],
+    'Assets': ['Cash & Cash Equivalents', 'Accounts Receivable', 'Inventory', 'Equipment', 'Furniture & Fixtures', 'Vehicles', 'Investments', 'Prepaid Expenses'],
+    'Liabilities': ['Accounts Payable', 'Credit Card Payable', 'Loans Payable', 'Accrued Expenses', 'Sales Tax Payable', 'Payroll Liabilities', 'Long-term Debt'],
+    'Other Expenses': ['Depreciation', 'Bad Debt', 'Charitable Contributions', 'Dues & Subscriptions', 'Uniforms', 'Miscellaneous', 'Uncategorized Expense']
   };
 
   private readonly VALID_PATTERN_TYPES = [

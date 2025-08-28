@@ -309,20 +309,46 @@ TASK: Analyze these ${transactions.length} transactions collectively, looking fo
 - Temporal relationships (transfers followed by purchases)
 - Amount patterns indicating subscriptions or services
 
-AVAILABLE CATEGORIES WITH SUBCATEGORIES:
-• Transportation: Gas & Fuel, Public Transit, Rideshare/Taxi, Parking, Vehicle Maintenance, Other Transport
-• Transfer: Account Transfer, Person-to-Person, Wire Transfer, Check Deposit, Other Transfer  
-• Business/Software: Software/SaaS, Development Tools, Cloud Services, Domain/Hosting, Business Apps, Other Business
-• Business/Marketing: Advertising, Social Media, Email Marketing, Analytics, Design Tools, Other Marketing
-• Banking/Fees: Account Fees, ATM Fees, Overdraft Fees, Wire Fees, Foreign Transaction, Other Bank Fees
-• Food & Dining: Restaurants, Fast Food, Coffee Shops, Groceries, Delivery, Other Food
-• Shopping: Retail, Online Shopping, Clothing, Electronics, Home & Garden, Other Shopping
-• Recurring/Subscription: Streaming Services, Software Subscriptions, Utilities, Insurance, Memberships, Other Recurring  
-• Income/Deposit: Salary, Freelance, Investment Income, Refund, Government Payment, Other Income
-• Healthcare: Medical, Dental, Pharmacy, Insurance, Therapy, Other Healthcare
-• Entertainment: Movies, Gaming, Sports, Hobbies, Books/Media, Other Entertainment
-• Utilities: Electric, Gas, Water, Internet, Phone, Trash/Recycling, Other Utilities
-• Other: Uncategorized, Charity, Education, Travel, Personal Care, Other
+AVAILABLE QUICKBOOKS CATEGORIES WITH SUBCATEGORIES:
+
+INCOME:
+• Income: Sales Revenue, Service Revenue, Product Sales, Consulting Income, Interest Income, Dividend Income, Other Income, Uncategorized Income
+
+COST OF GOODS SOLD:
+• Cost of Goods Sold: Job Materials, Construction Materials, Subcontractor Services, Parts Purchases, Freight and Shipping, Equipment Rental, Media Purchases, Merchant Account Fees
+
+OPERATING EXPENSES:
+• Payroll Expenses: Salaries & Wages, Employee Benefits, Payroll Taxes, Workers Compensation, Health Insurance, Retirement Plans, Contractor Payments, Freelancer Payments
+• Professional Services: Accounting & Bookkeeping, Legal Fees, Consulting Fees, Tax Preparation, Financial Services, Business Coaching, Other Professional Fees
+• Office Expenses: Office Supplies, Computer and Internet, Software Subscriptions, Printing & Reproduction, Postage and Delivery, Office Equipment, Telephone
+• Marketing & Advertising: Advertising, Online Marketing, Print Marketing, Website & SEO, Trade Shows, Promotional Materials, Social Media Marketing
+• Travel & Entertainment: Travel Expenses, Meals & Entertainment, Lodging, Business Meals, Transportation, Auto Expenses
+• Utilities: Electricity, Gas, Water & Sewer, Internet, Phone, Waste Management, Security Services
+• Insurance: General Liability, Professional Liability, Property Insurance, Auto Insurance, Health Insurance, Life Insurance, Disability Insurance
+• Rent & Lease: Office Rent, Equipment Lease, Vehicle Lease, Storage Rent, Property Lease
+• Maintenance & Repairs: Building Repairs, Equipment Maintenance, Vehicle Maintenance, Computer Repairs, Janitorial Services
+• Banking & Financial: Bank Service Charges, Credit Card Fees, Interest Expense, Loan Payments, Investment Fees, Foreign Exchange
+• Taxes & Licenses: Business Licenses, Property Taxes, Sales Tax, Payroll Taxes, Federal Taxes, State Taxes, Permits & Fees
+• Education & Training: Continuing Education, Employee Training, Conferences & Seminars, Books & Publications, Online Courses, Professional Development
+
+OWNER'S EQUITY & DISTRIBUTIONS:
+• Owner's Equity: Owner Investment, Owner Draw, Owner Distribution, Retained Earnings, Capital Contributions, Partner Distributions
+
+ASSETS:
+• Assets: Cash & Cash Equivalents, Accounts Receivable, Inventory, Equipment, Furniture & Fixtures, Vehicles, Investments, Prepaid Expenses
+
+LIABILITIES:
+• Liabilities: Accounts Payable, Credit Card Payable, Loans Payable, Accrued Expenses, Sales Tax Payable, Payroll Liabilities, Long-term Debt
+
+MISCELLANEOUS:
+• Other Expenses: Depreciation, Bad Debt, Charitable Contributions, Dues & Subscriptions, Uniforms, Miscellaneous, Uncategorized Expense
+
+CLASSIFICATION GUIDELINES:
+- PAYROLL: Use "Payroll Expenses" with appropriate subcategory for all employee wages, taxes, benefits, contractor payments, freelancer payments
+- OWNER TRANSACTIONS: Use "Owner's Equity" for owner draws, distributions, investments, capital contributions
+- PROFESSIONAL SERVICES: Accounting, legal, consulting, tax prep, financial advisory services
+- OFFICE SUPPLIES: Stationery, software subscriptions, computer equipment, telephone services
+- BUSINESS EXPENSES: All legitimate business operating costs should be categorized appropriately rather than "Other Expenses"
 
 TRANSACTIONS TO CLASSIFY:
 ${transactionsToAnalyze}

@@ -23,162 +23,260 @@ export interface CategorySelectorProps {
   };
 }
 
-// AI-compatible transaction categories for bank statement processing
+// QuickBooks Online compatible chart of accounts for small business
 const STANDARD_CATEGORIES: Category[] = [
+  // INCOME CATEGORIES
   {
-    id: 'Transportation',
-    name: 'Transportation',
+    id: 'Income',
+    name: 'Income',
     subcategories: [
-      { id: 'Gas & Fuel', name: 'Gas & Fuel' },
-      { id: 'Public Transit', name: 'Public Transit' },
-      { id: 'Rideshare/Taxi', name: 'Rideshare/Taxi' },
-      { id: 'Parking', name: 'Parking' },
-      { id: 'Vehicle Maintenance', name: 'Vehicle Maintenance' },
-      { id: 'Other Transport', name: 'Other Transport' }
+      { id: 'Sales Revenue', name: 'Sales Revenue' },
+      { id: 'Service Revenue', name: 'Service Revenue' },
+      { id: 'Product Sales', name: 'Product Sales' },
+      { id: 'Consulting Income', name: 'Consulting Income' },
+      { id: 'Interest Income', name: 'Interest Income' },
+      { id: 'Dividend Income', name: 'Dividend Income' },
+      { id: 'Other Income', name: 'Other Income' },
+      { id: 'Uncategorized Income', name: 'Uncategorized Income' }
     ]
   },
+
+  // COST OF GOODS SOLD
   {
-    id: 'Transfer',
-    name: 'Transfer',
+    id: 'Cost of Goods Sold',
+    name: 'Cost of Goods Sold',
     subcategories: [
-      { id: 'Account Transfer', name: 'Account Transfer' },
-      { id: 'Person-to-Person', name: 'Person-to-Person' },
-      { id: 'Wire Transfer', name: 'Wire Transfer' },
-      { id: 'Check Deposit', name: 'Check Deposit' },
-      { id: 'Other Transfer', name: 'Other Transfer' }
+      { id: 'Job Materials', name: 'Job Materials' },
+      { id: 'Construction Materials', name: 'Construction Materials' },
+      { id: 'Subcontractor Services', name: 'Subcontractor Services' },
+      { id: 'Parts Purchases', name: 'Parts Purchases' },
+      { id: 'Freight and Shipping', name: 'Freight and Shipping' },
+      { id: 'Equipment Rental', name: 'Equipment Rental' },
+      { id: 'Media Purchases', name: 'Media Purchases' },
+      { id: 'Merchant Account Fees', name: 'Merchant Account Fees' }
     ]
   },
+
+  // OPERATING EXPENSES
   {
-    id: 'Business/Software',
-    name: 'Business/Software',
+    id: 'Payroll Expenses',
+    name: 'Payroll Expenses',
     subcategories: [
-      { id: 'Software/SaaS', name: 'Software/SaaS' },
-      { id: 'Development Tools', name: 'Development Tools' },
-      { id: 'Cloud Services', name: 'Cloud Services' },
-      { id: 'Domain/Hosting', name: 'Domain/Hosting' },
-      { id: 'Business Apps', name: 'Business Apps' },
-      { id: 'Other Business', name: 'Other Business' }
+      { id: 'Salaries & Wages', name: 'Salaries & Wages' },
+      { id: 'Employee Benefits', name: 'Employee Benefits' },
+      { id: 'Payroll Taxes', name: 'Payroll Taxes' },
+      { id: 'Workers Compensation', name: 'Workers Compensation' },
+      { id: 'Health Insurance', name: 'Health Insurance' },
+      { id: 'Retirement Plans', name: 'Retirement Plans' },
+      { id: 'Contractor Payments', name: 'Contractor Payments' },
+      { id: 'Freelancer Payments', name: 'Freelancer Payments' }
     ]
   },
+
   {
-    id: 'Business/Marketing',
-    name: 'Business/Marketing',
+    id: 'Professional Services',
+    name: 'Professional Services',
+    subcategories: [
+      { id: 'Accounting & Bookkeeping', name: 'Accounting & Bookkeeping' },
+      { id: 'Legal Fees', name: 'Legal Fees' },
+      { id: 'Consulting Fees', name: 'Consulting Fees' },
+      { id: 'Tax Preparation', name: 'Tax Preparation' },
+      { id: 'Financial Services', name: 'Financial Services' },
+      { id: 'Business Coaching', name: 'Business Coaching' },
+      { id: 'Other Professional Fees', name: 'Other Professional Fees' }
+    ]
+  },
+
+  {
+    id: 'Office Expenses',
+    name: 'Office Expenses',
+    subcategories: [
+      { id: 'Office Supplies', name: 'Office Supplies' },
+      { id: 'Computer and Internet', name: 'Computer and Internet' },
+      { id: 'Software Subscriptions', name: 'Software Subscriptions' },
+      { id: 'Printing & Reproduction', name: 'Printing & Reproduction' },
+      { id: 'Postage and Delivery', name: 'Postage and Delivery' },
+      { id: 'Office Equipment', name: 'Office Equipment' },
+      { id: 'Telephone', name: 'Telephone' }
+    ]
+  },
+
+  {
+    id: 'Marketing & Advertising',
+    name: 'Marketing & Advertising',
     subcategories: [
       { id: 'Advertising', name: 'Advertising' },
-      { id: 'Social Media', name: 'Social Media' },
-      { id: 'Email Marketing', name: 'Email Marketing' },
-      { id: 'Analytics', name: 'Analytics' },
-      { id: 'Design Tools', name: 'Design Tools' },
-      { id: 'Other Marketing', name: 'Other Marketing' }
+      { id: 'Online Marketing', name: 'Online Marketing' },
+      { id: 'Print Marketing', name: 'Print Marketing' },
+      { id: 'Website & SEO', name: 'Website & SEO' },
+      { id: 'Trade Shows', name: 'Trade Shows' },
+      { id: 'Promotional Materials', name: 'Promotional Materials' },
+      { id: 'Social Media Marketing', name: 'Social Media Marketing' }
     ]
   },
+
   {
-    id: 'Banking/Fees',
-    name: 'Banking/Fees',
+    id: 'Travel & Entertainment',
+    name: 'Travel & Entertainment',
     subcategories: [
-      { id: 'Account Fees', name: 'Account Fees' },
-      { id: 'ATM Fees', name: 'ATM Fees' },
-      { id: 'Overdraft Fees', name: 'Overdraft Fees' },
-      { id: 'Wire Fees', name: 'Wire Fees' },
-      { id: 'Foreign Transaction', name: 'Foreign Transaction' },
-      { id: 'Other Bank Fees', name: 'Other Bank Fees' }
+      { id: 'Travel Expenses', name: 'Travel Expenses' },
+      { id: 'Meals & Entertainment', name: 'Meals & Entertainment' },
+      { id: 'Lodging', name: 'Lodging' },
+      { id: 'Business Meals', name: 'Business Meals' },
+      { id: 'Transportation', name: 'Transportation' },
+      { id: 'Auto Expenses', name: 'Auto Expenses' }
     ]
   },
-  {
-    id: 'Food & Dining',
-    name: 'Food & Dining',
-    subcategories: [
-      { id: 'Restaurants', name: 'Restaurants' },
-      { id: 'Fast Food', name: 'Fast Food' },
-      { id: 'Coffee Shops', name: 'Coffee Shops' },
-      { id: 'Groceries', name: 'Groceries' },
-      { id: 'Delivery', name: 'Delivery' },
-      { id: 'Other Food', name: 'Other Food' }
-    ]
-  },
-  {
-    id: 'Shopping',
-    name: 'Shopping',
-    subcategories: [
-      { id: 'Retail', name: 'Retail' },
-      { id: 'Online Shopping', name: 'Online Shopping' },
-      { id: 'Clothing', name: 'Clothing' },
-      { id: 'Electronics', name: 'Electronics' },
-      { id: 'Home & Garden', name: 'Home & Garden' },
-      { id: 'Other Shopping', name: 'Other Shopping' }
-    ]
-  },
-  {
-    id: 'Recurring/Subscription',
-    name: 'Recurring/Subscription',
-    subcategories: [
-      { id: 'Streaming Services', name: 'Streaming Services' },
-      { id: 'Software Subscriptions', name: 'Software Subscriptions' },
-      { id: 'Utilities', name: 'Utilities' },
-      { id: 'Insurance', name: 'Insurance' },
-      { id: 'Memberships', name: 'Memberships' },
-      { id: 'Other Recurring', name: 'Other Recurring' }
-    ]
-  },
-  {
-    id: 'Income/Deposit',
-    name: 'Income/Deposit',
-    subcategories: [
-      { id: 'Salary', name: 'Salary' },
-      { id: 'Freelance', name: 'Freelance' },
-      { id: 'Investment Income', name: 'Investment Income' },
-      { id: 'Refund', name: 'Refund' },
-      { id: 'Government Payment', name: 'Government Payment' },
-      { id: 'Other Income', name: 'Other Income' }
-    ]
-  },
-  {
-    id: 'Healthcare',
-    name: 'Healthcare',
-    subcategories: [
-      { id: 'Medical', name: 'Medical' },
-      { id: 'Dental', name: 'Dental' },
-      { id: 'Pharmacy', name: 'Pharmacy' },
-      { id: 'Insurance', name: 'Insurance' },
-      { id: 'Therapy', name: 'Therapy' },
-      { id: 'Other Healthcare', name: 'Other Healthcare' }
-    ]
-  },
-  {
-    id: 'Entertainment',
-    name: 'Entertainment',
-    subcategories: [
-      { id: 'Movies', name: 'Movies' },
-      { id: 'Gaming', name: 'Gaming' },
-      { id: 'Sports', name: 'Sports' },
-      { id: 'Hobbies', name: 'Hobbies' },
-      { id: 'Books/Media', name: 'Books/Media' },
-      { id: 'Other Entertainment', name: 'Other Entertainment' }
-    ]
-  },
+
   {
     id: 'Utilities',
     name: 'Utilities',
     subcategories: [
-      { id: 'Electric', name: 'Electric' },
+      { id: 'Electricity', name: 'Electricity' },
       { id: 'Gas', name: 'Gas' },
-      { id: 'Water', name: 'Water' },
+      { id: 'Water & Sewer', name: 'Water & Sewer' },
       { id: 'Internet', name: 'Internet' },
       { id: 'Phone', name: 'Phone' },
-      { id: 'Trash/Recycling', name: 'Trash/Recycling' },
-      { id: 'Other Utilities', name: 'Other Utilities' }
+      { id: 'Waste Management', name: 'Waste Management' },
+      { id: 'Security Services', name: 'Security Services' }
     ]
   },
+
   {
-    id: 'Other',
-    name: 'Other',
+    id: 'Insurance',
+    name: 'Insurance',
     subcategories: [
-      { id: 'Uncategorized', name: 'Uncategorized' },
-      { id: 'Charity', name: 'Charity' },
-      { id: 'Education', name: 'Education' },
-      { id: 'Travel', name: 'Travel' },
-      { id: 'Personal Care', name: 'Personal Care' },
-      { id: 'Other', name: 'Other' }
+      { id: 'General Liability', name: 'General Liability' },
+      { id: 'Professional Liability', name: 'Professional Liability' },
+      { id: 'Property Insurance', name: 'Property Insurance' },
+      { id: 'Auto Insurance', name: 'Auto Insurance' },
+      { id: 'Health Insurance', name: 'Health Insurance' },
+      { id: 'Life Insurance', name: 'Life Insurance' },
+      { id: 'Disability Insurance', name: 'Disability Insurance' }
+    ]
+  },
+
+  {
+    id: 'Rent & Lease',
+    name: 'Rent & Lease',
+    subcategories: [
+      { id: 'Office Rent', name: 'Office Rent' },
+      { id: 'Equipment Lease', name: 'Equipment Lease' },
+      { id: 'Vehicle Lease', name: 'Vehicle Lease' },
+      { id: 'Storage Rent', name: 'Storage Rent' },
+      { id: 'Property Lease', name: 'Property Lease' }
+    ]
+  },
+
+  {
+    id: 'Maintenance & Repairs',
+    name: 'Maintenance & Repairs',
+    subcategories: [
+      { id: 'Building Repairs', name: 'Building Repairs' },
+      { id: 'Equipment Maintenance', name: 'Equipment Maintenance' },
+      { id: 'Vehicle Maintenance', name: 'Vehicle Maintenance' },
+      { id: 'Computer Repairs', name: 'Computer Repairs' },
+      { id: 'Janitorial Services', name: 'Janitorial Services' }
+    ]
+  },
+
+  {
+    id: 'Banking & Financial',
+    name: 'Banking & Financial',
+    subcategories: [
+      { id: 'Bank Service Charges', name: 'Bank Service Charges' },
+      { id: 'Credit Card Fees', name: 'Credit Card Fees' },
+      { id: 'Interest Expense', name: 'Interest Expense' },
+      { id: 'Loan Payments', name: 'Loan Payments' },
+      { id: 'Investment Fees', name: 'Investment Fees' },
+      { id: 'Foreign Exchange', name: 'Foreign Exchange' }
+    ]
+  },
+
+  {
+    id: 'Taxes & Licenses',
+    name: 'Taxes & Licenses',
+    subcategories: [
+      { id: 'Business Licenses', name: 'Business Licenses' },
+      { id: 'Property Taxes', name: 'Property Taxes' },
+      { id: 'Sales Tax', name: 'Sales Tax' },
+      { id: 'Payroll Taxes', name: 'Payroll Taxes' },
+      { id: 'Federal Taxes', name: 'Federal Taxes' },
+      { id: 'State Taxes', name: 'State Taxes' },
+      { id: 'Permits & Fees', name: 'Permits & Fees' }
+    ]
+  },
+
+  {
+    id: 'Education & Training',
+    name: 'Education & Training',
+    subcategories: [
+      { id: 'Continuing Education', name: 'Continuing Education' },
+      { id: 'Employee Training', name: 'Employee Training' },
+      { id: 'Conferences & Seminars', name: 'Conferences & Seminars' },
+      { id: 'Books & Publications', name: 'Books & Publications' },
+      { id: 'Online Courses', name: 'Online Courses' },
+      { id: 'Professional Development', name: 'Professional Development' }
+    ]
+  },
+
+  // OWNER'S EQUITY & DISTRIBUTIONS
+  {
+    id: 'Owner\'s Equity',
+    name: 'Owner\'s Equity',
+    subcategories: [
+      { id: 'Owner Investment', name: 'Owner Investment' },
+      { id: 'Owner Draw', name: 'Owner Draw' },
+      { id: 'Owner Distribution', name: 'Owner Distribution' },
+      { id: 'Retained Earnings', name: 'Retained Earnings' },
+      { id: 'Capital Contributions', name: 'Capital Contributions' },
+      { id: 'Partner Distributions', name: 'Partner Distributions' }
+    ]
+  },
+
+  // ASSETS
+  {
+    id: 'Assets',
+    name: 'Assets',
+    subcategories: [
+      { id: 'Cash & Cash Equivalents', name: 'Cash & Cash Equivalents' },
+      { id: 'Accounts Receivable', name: 'Accounts Receivable' },
+      { id: 'Inventory', name: 'Inventory' },
+      { id: 'Equipment', name: 'Equipment' },
+      { id: 'Furniture & Fixtures', name: 'Furniture & Fixtures' },
+      { id: 'Vehicles', name: 'Vehicles' },
+      { id: 'Investments', name: 'Investments' },
+      { id: 'Prepaid Expenses', name: 'Prepaid Expenses' }
+    ]
+  },
+
+  // LIABILITIES
+  {
+    id: 'Liabilities',
+    name: 'Liabilities',
+    subcategories: [
+      { id: 'Accounts Payable', name: 'Accounts Payable' },
+      { id: 'Credit Card Payable', name: 'Credit Card Payable' },
+      { id: 'Loans Payable', name: 'Loans Payable' },
+      { id: 'Accrued Expenses', name: 'Accrued Expenses' },
+      { id: 'Sales Tax Payable', name: 'Sales Tax Payable' },
+      { id: 'Payroll Liabilities', name: 'Payroll Liabilities' },
+      { id: 'Long-term Debt', name: 'Long-term Debt' }
+    ]
+  },
+
+  // MISCELLANEOUS
+  {
+    id: 'Other Expenses',
+    name: 'Other Expenses',
+    subcategories: [
+      { id: 'Depreciation', name: 'Depreciation' },
+      { id: 'Bad Debt', name: 'Bad Debt' },
+      { id: 'Charitable Contributions', name: 'Charitable Contributions' },
+      { id: 'Dues & Subscriptions', name: 'Dues & Subscriptions' },
+      { id: 'Uniforms', name: 'Uniforms' },
+      { id: 'Miscellaneous', name: 'Miscellaneous' },
+      { id: 'Uncategorized Expense', name: 'Uncategorized Expense' }
     ]
   }
 ];
@@ -362,7 +460,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
               onChange={(e) => setCustomCategoryName(e.target.value)}
               placeholder="Enter custom category name"
               className="custom-input"
-              onKeyPress={(e) => e.key === 'Enter' && handleAddCustomCategory()}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
             />
             <button onClick={handleAddCustomCategory} className="add-btn">Add</button>
             <button onClick={cancelCustomCategory} className="cancel-btn">Cancel</button>
@@ -395,7 +493,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 onChange={(e) => setCustomSubcategoryName(e.target.value)}
                 placeholder="Enter custom subcategory name"
                 className="custom-input"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddCustomSubcategory()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCustomSubcategory()}
               />
               <button onClick={handleAddCustomSubcategory} className="add-btn">Add</button>
               <button onClick={cancelCustomSubcategory} className="cancel-btn">Cancel</button>
