@@ -55,7 +55,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   };
 
   const handleSave = () => {
-    onUpdate(editedTransaction);
+    onUpdate({ ...editedTransaction, userValidated: true });
     setIsEditing(false);
     setEditedTransaction({});
   };
@@ -69,7 +69,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
     if (isEditing) {
       setEditedTransaction(prev => ({ ...prev, category, subcategory }));
     } else {
-      onUpdate({ category, subcategory });
+      onUpdate({ category, subcategory, userValidated: true });
     }
   };
 

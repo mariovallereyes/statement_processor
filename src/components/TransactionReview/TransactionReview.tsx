@@ -121,11 +121,6 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
 
   const handleTransactionUpdate = (transactionId: string, updates: Partial<Transaction>) => {
     onTransactionUpdate(transactionId, updates);
-    
-    // If user validates a transaction, mark it as validated
-    if (updates.category || updates.subcategory) {
-      onTransactionUpdate(transactionId, { ...updates, userValidated: true });
-    }
   };
 
   const handleBulkEdit = (updates: Partial<Transaction>) => {
