@@ -85,7 +85,8 @@ export class EnhancedTransactionClassificationService {
           category: patternResult.category,
           subcategory: '',
           confidence: patternResult.confidence,
-          reasoning: `Matched merchant pattern: ${patternResult.category}`
+          reasoning: [`Matched merchant pattern: ${patternResult.category}`],
+          suggestedRules: []
         };
       } else if (this.aiModelAvailable && !this.fallbackMode) {
         // Try AI classification second
