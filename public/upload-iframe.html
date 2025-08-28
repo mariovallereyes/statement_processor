@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .upload-container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .upload-header {
+            margin-bottom: 20px;
+        }
+        
+        .upload-header h3 {
+            color: #333;
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }
+        
+        .upload-header p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .upload-text strong {
+            color: #007bff;
+            font-size: 16px;
+        }
+        
+        .upload-text small {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-top: 8px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .protection-info {
+            margin-top: 12px;
+            padding: 8px;
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <div class="upload-header">
+            <h3>📁 Upload Bank Statement</h3>
+            <p>Extension-proof file upload</p>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">
+                <strong>Click to select file</strong>
+                <small>Supports PDF and CSV files (max 50MB)</small>
+            </div>
+        </div>
+        
+        <input type="file" id="fileInput" class="file-input" accept=".pdf,.csv" />
+        
+        <div class="protection-info">
+            🛡️ Protected from browser extension interference
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('status');
+            
+            let config = {
+                acceptedFormats: ['.pdf', '.csv'],
+                maxFileSize: 50 * 1024 * 1024, // 50MB
+            };
+            
+            // Listen for configuration from parent
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'IFRAME_UPLOAD_CONFIG') {
+                    config = { ...config, ...event.data.config };
+                    updateUI();
+                }
+            });
+            
+            function updateUI() {
+                const formatText = config.acceptedFormats.join(', ');
+                const sizeText = (config.maxFileSize / 1024 / 1024).toFixed(1);
+                uploadArea.querySelector('small').textContent = 
+                    `Supports ${formatText} files (max ${sizeText}MB)`;
+                fileInput.accept = config.acceptedFormats.join(',');
+            }
+            
+            function showStatus(message, type) {
+                status.textContent = message;
+                status.className = `status ${type}`;
+                status.style.display = 'block';
+                
+                if (type === 'success') {
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            function processFile(file) {
+                if (!file) return;
+                
+                // Validation
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!config.acceptedFormats.includes(fileExtension)) {
+                    showStatus(`Unsupported file type. Accepted formats: ${config.acceptedFormats.join(', ')}`, 'error');
+                    return;
+                }
+                
+                if (file.size > config.maxFileSize) {
+                    showStatus(`File too large. Maximum size: ${(config.maxFileSize / 1024 / 1024).toFixed(1)}MB`, 'error');
+                    return;
+                }
+                
+                // Show processing
+                showStatus('Processing file...', 'success');
+                
+                // Read file and send to parent
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const uploadResult = {
+                        fileId: `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+                        fileType: fileExtension === '.pdf' ? 'pdf' : 'csv',
+                        metadata: {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            lastModified: new Date(file.lastModified)
+                        },
+                        rawContent: e.target.result
+                    };
+                    
+                    // Send result to parent window
+                    window.parent.postMessage({
+                        type: 'IFRAME_UPLOAD_SUCCESS',
+                        uploadResult: uploadResult
+                    }, '*');
+                    
+                    showStatus(`Successfully uploaded: ${file.name}`, 'success');
+                };
+                
+                reader.onerror = function() {
+                    showStatus('Failed to read file', 'error');
+                    window.parent.postMessage({
+                        type: 'IFRAME_UPLOAD_ERROR',
+                        error: 'Failed to read file'
+                    }, '*');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+            
+            // Click handler
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // File input change
+            fileInput.addEventListener('change', function(e) {
+                processFile(e.target.files[0]);
+            });
+            
+            // Drag and drop handlers
+            uploadArea.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.target === uploadArea) {
+                    uploadArea.classList.remove('dragover');
+                }
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+            
+            // Signal ready to parent
+            window.parent.postMessage({
+                type: 'IFRAME_UPLOAD_READY'
+            }, '*');
+            
+        })();
+    </script>
+</body>
+</html>
