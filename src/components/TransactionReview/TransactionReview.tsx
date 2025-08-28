@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction } from '../../models/Transaction';
 import { ClassificationResult } from '../../models/ClassificationResult';
 import { ProcessingDecision } from '../../models/ProcessingDecision';
+import { BulkAnalysisProgress, BulkAnalysisResult } from '../../models/BulkAnalysis';
 import { TransactionItem } from './TransactionItem';
 import { CategorySelector } from './CategorySelector';
 import { BulkEditPanel } from './BulkEditPanel';
 import { ConfidenceIndicator } from './ConfidenceIndicator';
+import { bulkTransactionClassificationService } from '../../services/BulkTransactionClassificationService';
 import './TransactionReview.css';
 
 export interface TransactionReviewProps {
@@ -15,6 +17,7 @@ export interface TransactionReviewProps {
   onTransactionUpdate: (transactionId: string, updates: Partial<Transaction>) => void;
   onBulkUpdate: (transactionIds: string[], updates: Partial<Transaction>) => void;
   onConfidenceUpdate?: (overallConfidence: number) => void;
+  onBulkAnalysisComplete?: (results: BulkAnalysisResult) => void;
 }
 
 export interface TransactionWithClassification extends Transaction {
@@ -27,12 +30,19 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
   processingDecision,
   onTransactionUpdate,
   onBulkUpdate,
-  onConfidenceUpdate
+  onConfidenceUpdate,
+  onBulkAnalysisComplete
 }) => {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [filterBy, setFilterBy] = useState<'all' | 'low-confidence' | 'unvalidated'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'confidence'>('date');
+  
+  // Bulk analysis state
+  const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
+  const [bulkAnalysisProgress, setBulkAnalysisProgress] = useState<BulkAnalysisProgress | null>(null);
+  const [bulkAnalysisResult, setBulkAnalysisResult] = useState<BulkAnalysisResult | null>(null);
+  const [showBulkResults, setShowBulkResults] = useState(false);
 
   // Combine transactions with their classification results
   const transactionsWithClassification: TransactionWithClassification[] = useMemo(() => {
@@ -125,10 +135,94 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
     setShowBulkEdit(false);
   };
 
+  // Bulk Analysis Handlers
+  const handleBulkAnalysis = async () => {
+    const lowConfidenceTransactions = transactionsWithClassification.filter(t => 
+      t.extractionConfidence < 0.5 || 
+      t.classificationConfidence < 0.5 ||
+      (t.classificationResult?.confidence || 0) < 0.5
+    );
+
+    if (lowConfidenceTransactions.length === 0) {
+      alert('No transactions need AI analysis. All transactions have sufficient confidence scores.');
+      return;
+    }
+
+    setIsBulkAnalyzing(true);
+    setBulkAnalysisProgress(null);
+    setBulkAnalysisResult(null);
+
+    try {
+      // Set up progress callback
+      bulkTransactionClassificationService.setProgressCallback(setBulkAnalysisProgress);
+
+      // Start bulk analysis
+      const result = await bulkTransactionClassificationService.analyzeBulkTransactions(
+        lowConfidenceTransactions,
+        transactions, // Full context
+        {
+          includeHighConfidenceContext: true,
+          maxContextTransactions: 20,
+          enablePatternDetection: true,
+          enableMerchantStandardization: true,
+          confidenceThreshold: 0.7
+        }
+      );
+
+      setBulkAnalysisResult(result);
+      setShowBulkResults(true);
+
+      // Notify parent component
+      if (onBulkAnalysisComplete) {
+        onBulkAnalysisComplete(result);
+      }
+
+    } catch (error) {
+      console.error('Bulk analysis failed:', error);
+      setBulkAnalysisProgress({
+        stage: 'error',
+        progress: 0,
+        message: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        processedCount: 0,
+        totalCount: lowConfidenceTransactions.length
+      });
+    } finally {
+      setIsBulkAnalyzing(false);
+    }
+  };
+
+  const handleApplyBulkResults = () => {
+    if (!bulkAnalysisResult) return;
+
+    // Apply all bulk classification results
+    bulkAnalysisResult.processedTransactions.forEach(result => {
+      const updates: Partial<Transaction> = {
+        category: result.category,
+        confidence: result.confidence,
+        classificationConfidence: result.confidence,
+        userValidated: result.confidence > 0.85, // Auto-validate high confidence results
+      };
+
+      onTransactionUpdate(result.transactionId, updates);
+    });
+
+    // Clear results
+    setBulkAnalysisResult(null);
+    setShowBulkResults(false);
+
+    // Show success message
+    alert(`Successfully applied AI classifications to ${bulkAnalysisResult.processedTransactions.length} transactions!`);
+  };
+
+  const handleRejectBulkResults = () => {
+    setBulkAnalysisResult(null);
+    setShowBulkResults(false);
+  };
+
   const lowConfidenceCount = transactionsWithClassification.filter(t => 
-    t.extractionConfidence < 0.8 || 
-    t.classificationConfidence < 0.8 ||
-    (t.classificationResult?.confidence || 0) < 0.8
+    t.extractionConfidence < 0.5 || 
+    t.classificationConfidence < 0.5 ||
+    (t.classificationResult?.confidence || 0) < 0.5
   ).length;
 
   const unvalidatedCount = transactionsWithClassification.filter(t => !t.userValidated).length;
@@ -200,16 +294,111 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
         </div>
       </div>
 
-      {processingDecision.requiresReview.length > 0 && (
+      {(processingDecision.requiresReview.length > 0 || lowConfidenceCount > 0) && (
         <div className="review-alerts">
-          <h3>Items Requiring Attention</h3>
-          {processingDecision.requiresReview.map(item => (
-            <div key={item.id} className={`alert alert-${item.type}`}>
-              <strong>{item.type.charAt(0).toUpperCase() + item.type.slice(1)}:</strong> {item.description}
-              <br />
-              <small>Suggested action: {item.suggestedAction}</small>
+          <div className="alerts-header">
+            <h3>Items Requiring Attention</h3>
+            {lowConfidenceCount > 0 && (
+              <div className="ai-analysis-section">
+                <div className="ai-analysis-summary">
+                  <span className="confidence-badge low">
+                    {lowConfidenceCount} transactions need AI analysis
+                  </span>
+                  {!isBulkAnalyzing && !showBulkResults && (
+                    <button 
+                      onClick={handleBulkAnalysis}
+                      className="ai-analysis-btn"
+                      disabled={isBulkAnalyzing}
+                    >
+                      🤖 Analyze All with AI
+                    </button>
+                  )}
+                </div>
+
+                {/* Progress indicator during analysis */}
+                {isBulkAnalyzing && bulkAnalysisProgress && (
+                  <div className="ai-progress">
+                    <div className="progress-header">
+                      <span className="progress-stage">{bulkAnalysisProgress.stage}</span>
+                      <span className="progress-percent">{Math.round(bulkAnalysisProgress.progress)}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${bulkAnalysisProgress.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="progress-message">{bulkAnalysisProgress.message}</div>
+                    {bulkAnalysisProgress.currentChunk && (
+                      <div className="progress-details">
+                        Chunk {bulkAnalysisProgress.currentChunk} of {bulkAnalysisProgress.totalChunks} | 
+                        Processed: {bulkAnalysisProgress.processedCount}/{bulkAnalysisProgress.totalCount}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Results preview */}
+                {showBulkResults && bulkAnalysisResult && (
+                  <div className="ai-results">
+                    <div className="results-header">
+                      <h4>🎉 AI Analysis Complete!</h4>
+                      <div className="results-stats">
+                        <span className="stat">
+                          Processed: <strong>{bulkAnalysisResult.processedTransactions.length}</strong> transactions
+                        </span>
+                        <span className="stat">
+                          Avg Confidence: <strong>{(bulkAnalysisResult.overallConfidence * 100).toFixed(1)}%</strong>
+                        </span>
+                        <span className="stat">
+                          Cost: <strong>${bulkAnalysisResult.processingStats.cost.toFixed(4)}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {bulkAnalysisResult.detectedPatterns.length > 0 && (
+                      <div className="detected-patterns">
+                        <h5>🔍 Patterns Detected:</h5>
+                        {bulkAnalysisResult.detectedPatterns.slice(0, 3).map(pattern => (
+                          <div key={pattern.id} className="pattern-item">
+                            <span className="pattern-type">{pattern.type}</span>: {pattern.description}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="results-actions">
+                      <button 
+                        onClick={handleApplyBulkResults}
+                        className="apply-results-btn"
+                      >
+                        ✅ Apply All Classifications
+                      </button>
+                      <button 
+                        onClick={handleRejectBulkResults}
+                        className="reject-results-btn"
+                      >
+                        ❌ Reject and Review Manually
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Original review alerts */}
+          {processingDecision.requiresReview.length > 0 && (
+            <div className="original-alerts">
+              {processingDecision.requiresReview.map(item => (
+                <div key={item.id} className={`alert alert-${item.type}`}>
+                  <strong>{item.type.charAt(0).toUpperCase() + item.type.slice(1)}:</strong> {item.description}
+                  <br />
+                  <small>Suggested action: {item.suggestedAction}</small>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 

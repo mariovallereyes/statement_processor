@@ -753,3 +753,252 @@
     padding: 1rem;
   }
 }
+
+/* AI Analysis Components */
+.ai-analysis-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.ai-analysis-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.confidence-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.confidence-badge.low {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.ai-analysis-btn {
+  background: #00d4aa;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-analysis-btn:hover:not(:disabled) {
+  background: #00c29a;
+  transform: translateY(-1px);
+}
+
+.ai-analysis-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Progress Indicator */
+.ai-progress {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-stage {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.progress-percent {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.progress-bar {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  height: 8px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: #00d4aa;
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.progress-message {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.progress-details {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Results Preview */
+.ai-results {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.results-header {
+  margin-bottom: 1rem;
+}
+
+.results-header h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.results-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.stat strong {
+  color: #2d3748;
+}
+
+.detected-patterns {
+  margin: 1rem 0;
+}
+
+.detected-patterns h5 {
+  margin: 0 0 0.5rem 0;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pattern-item {
+  background: #f7fafc;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.pattern-type {
+  background: #4299e1;
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.results-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.apply-results-btn, .reject-results-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.apply-results-btn {
+  background: #48bb78;
+  color: white;
+}
+
+.apply-results-btn:hover {
+  background: #38a169;
+  transform: translateY(-1px);
+}
+
+.reject-results-btn {
+  background: #f56565;
+  color: white;
+}
+
+.reject-results-btn:hover {
+  background: #e53e3e;
+  transform: translateY(-1px);
+}
+
+/* Enhanced Alerts Section */
+.alerts-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.original-alerts {
+  margin-top: 1rem;
+}
+
+/* Mobile Responsiveness for AI Components */
+@media (max-width: 768px) {
+  .ai-analysis-summary {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .ai-analysis-btn {
+    justify-content: center;
+  }
+  
+  .results-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .results-actions {
+    flex-direction: column;
+  }
+  
+  .apply-results-btn, .reject-results-btn {
+    justify-content: center;
+  }
+}
