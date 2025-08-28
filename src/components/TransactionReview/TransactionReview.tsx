@@ -50,9 +50,9 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
     switch (filterBy) {
       case 'low-confidence':
         filtered = filtered.filter(t => 
-          t.extractionConfidence < 0.8 || 
-          t.classificationConfidence < 0.8 ||
-          (t.classificationResult?.confidence || 0) < 0.8
+          t.extractionConfidence < 0.5 || 
+          t.classificationConfidence < 0.5 ||
+          (t.classificationResult?.confidence || 0) < 0.5
         );
         break;
       case 'unvalidated':

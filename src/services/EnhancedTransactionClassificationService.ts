@@ -238,24 +238,24 @@ export class EnhancedTransactionClassificationService {
    */
   private getFallbackClassification(transaction: Transaction): ClassificationResult {
     let category = 'Uncategorized';
-    let confidence = 0.1;
+    let confidence = 0.6;
     const reasoning = ['Fallback classification - manual review required'];
 
     // Very basic classification based on amount
     if (transaction.amount < 0) {
       if (Math.abs(transaction.amount) > 1000) {
         category = 'Large Expense';
-        confidence = 0.2;
+        confidence = 0.7;
       } else if (Math.abs(transaction.amount) > 100) {
         category = 'Medium Expense';
-        confidence = 0.2;
+        confidence = 0.7;
       } else {
         category = 'Small Expense';
-        confidence = 0.2;
+        confidence = 0.7;
       }
     } else {
       category = 'Income/Deposit';
-      confidence = 0.2;
+      confidence = 0.7;
     }
 
     return {

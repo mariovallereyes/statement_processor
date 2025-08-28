@@ -41,8 +41,8 @@ export interface ItemConfidenceScore {
 }
 
 export const DEFAULT_CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
-  autoProcessing: 0.95,
-  targetedReviewMin: 0.80,
-  targetedReviewMax: 0.95,
-  fullReviewThreshold: 0.80
+  autoProcessing: 0.85,
+  targetedReviewMin: 0.50,
+  targetedReviewMax: 0.75,
+  fullReviewThreshold: 0.50
 };
