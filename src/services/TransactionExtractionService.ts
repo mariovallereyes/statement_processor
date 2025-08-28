@@ -118,26 +118,29 @@ export class TransactionExtractionService {
       }
 
       try {
-        const parsedData = await this.parseTransactionLine(line, enableNLP);
+        // Extract ALL amounts from the line and create separate transactions for each
+        const multipleTransactions = await this.parseMultipleTransactionsFromLine(line, enableNLP);
         
-        if (parsedData.confidence >= minimumConfidence) {
-          // Validate required fields
-          if (parsedData.date && parsedData.amount !== undefined && parsedData.description) {
-            // Check balance requirement
-            const hasBalance = parsedData.balance !== undefined && parsedData.balance !== parsedData.amount;
-            if (!requireBalance || hasBalance) {
-              const transaction = this.createTransaction(parsedData, baseConfidence);
-              transactions.push(transaction);
-              processingMetadata.transactionsFound++;
-              confidenceSum += transaction.extractionConfidence;
+        for (const parsedData of multipleTransactions) {
+          if (parsedData.confidence >= minimumConfidence) {
+            // Validate required fields
+            if (parsedData.date && parsedData.amount !== undefined && parsedData.description) {
+              // Check balance requirement
+              const hasBalance = parsedData.balance !== undefined && parsedData.balance !== parsedData.amount;
+              if (!requireBalance || hasBalance) {
+                const transaction = this.createTransaction(parsedData, baseConfidence);
+                transactions.push(transaction);
+                processingMetadata.transactionsFound++;
+                confidenceSum += transaction.extractionConfidence;
+              } else {
+                processingMetadata.failedParses++;
+              }
             } else {
               processingMetadata.failedParses++;
             }
           } else {
             processingMetadata.failedParses++;
           }
-        } else {
-          processingMetadata.failedParses++;
         }
       } catch (error) {
         processingMetadata.failedParses++;
@@ -162,7 +165,98 @@ export class TransactionExtractionService {
   }
 
   /**
-   * Parse a single line to extract transaction data
+   * Parse a single line to extract ALL transactions (one per dollar amount)
+   */
+  private async parseMultipleTransactionsFromLine(
+    line: string,
+    enableNLP: boolean = true
+  ): Promise<ParsedTransactionData[]> {
+    // Extract ALL amounts from the line
+    const allAmounts = this.extractAllAmounts(line);
+    
+    if (allAmounts.length === 0) {
+      // Fallback to single transaction parsing if no amounts found
+      const singleResult = await this.parseTransactionLine(line, enableNLP);
+      return singleResult.amount !== undefined ? [singleResult] : [];
+    }
+    
+    const transactions: ParsedTransactionData[] = [];
+    
+    // Create a transaction for each amount found
+    for (let i = 0; i < allAmounts.length; i++) {
+      const amountData = allAmounts[i];
+      const result: ParsedTransactionData = {
+        confidence: 0,
+        rawLine: line,
+        amount: amountData.amount,
+        type: amountData.isNegative ? 'debit' : 'credit'
+      };
+      
+      // Extract date (shared across all transactions from this line)
+      const dateMatch = this.extractDate(line);
+      if (dateMatch) {
+        result.date = dateMatch.date;
+        result.confidence += 0.3;
+      }
+      
+      // Add amount confidence
+      result.confidence += 0.3;
+      
+      // Extract balance (only for the last amount, typically the running balance)
+      if (i === allAmounts.length - 1) {
+        const balanceMatch = this.extractBalance(line);
+        if (balanceMatch && balanceMatch !== amountData.amount) {
+          result.balance = balanceMatch;
+          result.confidence += 0.1;
+        }
+      }
+      
+      // Extract description - try to isolate description relevant to this amount
+      const descriptionMatch = this.extractDescriptionForSpecificAmount(line, amountData, i);
+      if (descriptionMatch) {
+        result.description = descriptionMatch.description;
+        result.merchantName = descriptionMatch.merchantName;
+        result.location = descriptionMatch.location;
+        result.confidence += 0.2;
+      } else {
+        // Fallback to general description with amount indicator
+        const generalDesc = this.extractDescription(line, result.date, result.amount);
+        if (generalDesc) {
+          result.description = `${generalDesc.description} [Amount ${i + 1}]`;
+          result.merchantName = generalDesc.merchantName;
+          result.location = generalDesc.location;
+          result.confidence += 0.1;
+        }
+      }
+      
+      // Extract reference numbers
+      const referenceMatch = this.extractReferenceNumber(line);
+      if (referenceMatch) {
+        result.referenceNumber = `${referenceMatch}-${i + 1}`;
+        result.confidence += 0.05;
+      }
+      
+      // Extract check numbers
+      const checkMatch = this.extractCheckNumber(line);
+      if (checkMatch) {
+        result.checkNumber = checkMatch;
+        result.confidence += 0.05;
+      }
+      
+      // Ensure minimum description
+      if (!result.description) {
+        result.description = `Transaction ${i + 1} from line: ${line.substring(0, 50)}...`;
+        result.confidence += 0.05;
+      }
+      
+      transactions.push(result);
+    }
+    
+    return transactions;
+  }
+
+  /**
+   * Parse a single line to extract transaction data (legacy method)
    */
   private async parseTransactionLine(
     line: string,
@@ -296,7 +390,82 @@ export class TransactionExtractionService {
   }
 
   /**
-   * Extract amount from transaction line
+   * Extract ALL amounts from the line (for multiple transaction parsing)
+   */
+  private extractAllAmounts(line: string): { amount: number; confidence: number; isNegative: boolean; original: string; position: number }[] {
+    const foundAmounts: { amount: number; confidence: number; isNegative: boolean; original: string; position: number }[] = [];
+
+    for (const pattern of this.amountPatterns) {
+      pattern.lastIndex = 0;
+      let match;
+      
+      while ((match = pattern.exec(line)) !== null) {
+        const amountStr = match[0];
+        let confidence = 0.8;
+
+        // Clean the amount string
+        const cleanAmount = amountStr.replace(/[$,-]/g, '');
+        const amount = parseFloat(cleanAmount);
+
+        if (!isNaN(amount) && amount > 0) {
+          // Higher confidence for properly formatted amounts
+          if (amountStr.includes('$')) confidence += 0.1;
+          if (amountStr.includes(',')) confidence += 0.05;
+          if (/\.\d{2}$/.test(amountStr)) confidence += 0.05;
+
+          // Determine if it's a debit or credit
+          const isNegative = amountStr.includes('-');
+          
+          // Boost confidence for negative amounts (they're more likely to be transaction amounts)
+          if (isNegative) confidence += 0.2;
+          
+          foundAmounts.push({
+            amount,
+            confidence,
+            isNegative,
+            original: amountStr,
+            position: match.index || 0
+          });
+        }
+      }
+    }
+
+    // Sort by position in line to maintain order
+    return foundAmounts.sort((a, b) => a.position - b.position);
+  }
+
+  /**
+   * Extract description for a specific amount in a line with multiple transactions
+   */
+  private extractDescriptionForSpecificAmount(
+    line: string, 
+    amountData: { amount: number; position: number; original: string }, 
+    amountIndex: number
+  ): { description: string; merchantName?: string; location?: string } | null {
+    // Try to find text segments around each amount
+    const segments = line.split(/\$?[\d,]+\.?\d{0,2}/);
+    
+    if (segments.length > amountIndex + 1) {
+      const relevantSegment = segments[amountIndex] || segments[amountIndex + 1] || '';
+      const cleanSegment = relevantSegment.trim();
+      
+      if (cleanSegment.length > 3) {
+        // Extract merchant from this segment
+        const merchantMatch = this.extractMerchantFromDescription(cleanSegment);
+        
+        return {
+          description: cleanSegment,
+          merchantName: merchantMatch,
+          location: undefined // Location extraction can be added later if needed
+        };
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract amount from transaction line (legacy single amount method)
    */
   private extractAmount(line: string): { amount: number; confidence: number; isNegative: boolean } | null {
     const foundAmounts: { amount: number; confidence: number; isNegative: boolean; original: string; position: number }[] = [];

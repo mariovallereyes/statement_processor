@@ -215,25 +215,45 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
    * Get basic fallback classification when all else fails
    */
   private getFallbackClassification(transaction: Transaction): ClassificationResult {
-    let category = 'Uncategorized';
-    let confidence = 0.6;
+    let category = 'Other Expenses';
+    let confidence = 0.3;
     const reasoning = ['Fallback classification - manual review required'];
 
-    // Very basic classification based on amount
-    if (transaction.amount < 0) {
-      if (Math.abs(transaction.amount) > 1000) {
-        category = 'Large Expense';
-        confidence = 0.7;
-      } else if (Math.abs(transaction.amount) > 100) {
-        category = 'Medium Expense';
-        confidence = 0.7;
+    // Analyze transaction description and type to avoid misclassification
+    const desc = transaction.description.toUpperCase();
+    const isDebit = transaction.type === 'debit' || transaction.amount < 0;
+    const isCredit = transaction.type === 'credit' || transaction.amount > 0;
+
+    // Check for obvious expense patterns first
+    if (desc.includes('PURCHASE') || desc.includes('CHECKCARD') || desc.includes('PAYPAL') || 
+        desc.includes('WITHDRAWAL') || desc.includes('ATM') || desc.includes('FEE')) {
+      category = 'Other Expenses';
+      confidence = 0.8;
+      reasoning.push('Transaction contains expense keywords');
+    }
+    // Check for obvious income patterns
+    else if (desc.includes('DEPOSIT') || desc.includes('DIRECT DEP') || desc.includes('PAYROLL') || 
+             desc.includes('SALARY') || desc.includes('INTEREST PAID')) {
+      category = 'Income';
+      confidence = 0.8;
+      reasoning.push('Transaction contains income keywords');
+    }
+    // Amount-based logic only as last resort
+    else if (isDebit) {
+      category = 'Other Expenses';
+      confidence = 0.4;
+      reasoning.push('Debit transaction - likely expense');
+    } else if (isCredit) {
+      // For credits, be more careful - could be refund, transfer, or actual income
+      if (desc.includes('TRANSFER') || desc.includes('ZELLE') || desc.includes('REFUND')) {
+        category = 'Other Expenses'; // Treat transfers/refunds as expenses to review
+        confidence = 0.4;
+        reasoning.push('Credit transaction but likely transfer/refund');
       } else {
-        category = 'Small Expense';
-        confidence = 0.7;
+        category = 'Income';
+        confidence = 0.4;
+        reasoning.push('Credit transaction - possible income');
       }
-    } else {
-      category = 'Income/Deposit';
-      confidence = 0.7;
     }
 
     return {
