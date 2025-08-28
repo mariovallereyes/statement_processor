@@ -391,9 +391,15 @@ export class TransactionExtractionService {
 
   /**
    * Extract ALL amounts from the line (for multiple transaction parsing)
+   * CRITICAL: Must validate against summary patterns to prevent false transactions
    */
   private extractAllAmounts(line: string): { amount: number; confidence: number; isNegative: boolean; original: string; position: number }[] {
     const foundAmounts: { amount: number; confidence: number; isNegative: boolean; original: string; position: number }[] = [];
+
+    // FIRST: Check if this line is a summary/total line - if so, return empty array
+    if (this.isSummaryLine(line)) {
+      return [];
+    }
 
     for (const pattern of this.amountPatterns) {
       pattern.lastIndex = 0;
@@ -408,6 +414,12 @@ export class TransactionExtractionService {
         const amount = parseFloat(cleanAmount);
 
         if (!isNaN(amount) && amount > 0) {
+          // DOUBLE-CHECK: Validate this specific amount isn't a summary total
+          const contextAroundAmount = this.getContextAroundAmount(line, match.index || 0, amountStr.length);
+          if (this.isSummaryAmount(contextAroundAmount, amount)) {
+            continue; // Skip this amount - it's a summary total
+          }
+
           // Higher confidence for properly formatted amounts
           if (amountStr.includes('$')) confidence += 0.1;
           if (amountStr.includes(',')) confidence += 0.05;
@@ -432,6 +444,58 @@ export class TransactionExtractionService {
 
     // Sort by position in line to maintain order
     return foundAmounts.sort((a, b) => a.position - b.position);
+  }
+
+  /**
+   * Detect if a line is a summary/total line (secondary validation)
+   */
+  private isSummaryLine(line: string): boolean {
+    const normalizedLine = line.trim().toUpperCase();
+    
+    // Check for summary indicators
+    const summaryKeywords = [
+      'TOTAL', 'SUBTOTAL', 'SUB-TOTAL', 'GRAND TOTAL', 'SUMMARY',
+      'BALANCE', 'BEGINNING BALANCE', 'ENDING BALANCE', 'CURRENT BALANCE',
+      'DEPOSITS TOTAL', 'WITHDRAWALS TOTAL', 'CREDITS TOTAL', 'DEBITS TOTAL',
+      'NUMBER OF DEPOSITS', 'NUMBER OF WITHDRAWALS', 'NUMBER OF TRANSACTIONS',
+      'SERVICE FEES TOTAL', 'MONTHLY FEE', 'QUARTERLY FEE'
+    ];
+    
+    return summaryKeywords.some(keyword => normalizedLine.includes(keyword));
+  }
+
+  /**
+   * Get text context around a specific amount for validation
+   */
+  private getContextAroundAmount(line: string, position: number, amountLength: number): string {
+    const start = Math.max(0, position - 50);
+    const end = Math.min(line.length, position + amountLength + 50);
+    return line.substring(start, end);
+  }
+
+  /**
+   * Validate if an amount in its context is a summary total
+   */
+  private isSummaryAmount(context: string, amount: number): boolean {
+    const normalizedContext = context.trim().toUpperCase();
+    
+    // Patterns that indicate this amount is a summary/total
+    const summaryContextPatterns = [
+      /TOTAL.*\$?[\d,]+\.?\d{0,2}/i,
+      /SUBTOTAL.*\$?[\d,]+\.?\d{0,2}/i,
+      /BALANCE.*\$?[\d,]+\.?\d{0,2}/i,
+      /SUMMARY.*\$?[\d,]+\.?\d{0,2}/i,
+      /\$?[\d,]+\.?\d{0,2}.*TOTAL/i,
+      /\$?[\d,]+\.?\d{0,2}.*BALANCE/i,
+      /DEPOSITS?.*\$?[\d,]+\.?\d{0,2}/i,
+      /WITHDRAWALS?.*\$?[\d,]+\.?\d{0,2}/i,
+      /CREDITS?.*\$?[\d,]+\.?\d{0,2}/i,
+      /DEBITS?.*\$?[\d,]+\.?\d{0,2}/i,
+      /FEES?.*\$?[\d,]+\.?\d{0,2}/i,
+      /\d+\s+(DEPOSITS?|WITHDRAWALS?|TRANSACTIONS?)/i
+    ];
+    
+    return summaryContextPatterns.some(pattern => pattern.test(normalizedContext));
   }
 
   /**
@@ -1097,32 +1161,109 @@ export class TransactionExtractionService {
 
   /**
    * Determine if a line should be skipped during processing
+   * CRITICAL: Must catch ALL PDF summary amounts to prevent false transactions
    */
   private shouldSkipLine(line: string): boolean {
+    const normalizedLine = line.trim().toUpperCase();
+    
+    // Quick check for empty lines
+    if (!normalizedLine || /^[-=*\s]+$/.test(line)) {
+      return true;
+    }
+    
+    // COMPREHENSIVE TOTAL/SUMMARY DETECTION - 100% COVERAGE
+    const summaryPatterns = [
+      // Standard totals with explicit keywords
+      /^(TOTAL|SUBTOTAL|SUB-TOTAL|GRAND\s+TOTAL)\s*[:.-]?\s*\$?\d/i,
+      /^(TOTAL|SUBTOTAL)\s+(DEPOSITS?|WITHDRAWALS?|CREDITS?|DEBITS?|TRANSACTIONS?|PAYMENTS?|TRANSFERS?|FEES?)/i,
+      /(TOTAL|SUBTOTAL)\s+(DEPOSITS?|WITHDRAWALS?|CREDITS?|DEBITS?)\s*[:.-]?\s*\$?\d/i,
+      
+      // Beginning/Ending balance formats
+      /^(BEGINNING|ENDING|OPENING|CLOSING)\s+(BALANCE|TOTAL)/i,
+      /^(PREVIOUS|STARTING|CURRENT|NEW)\s+(BALANCE|TOTAL)/i,
+      /^BALANCE\s+(FORWARD|BROUGHT\s+FORWARD)/i,
+      
+      // Summary section identifiers
+      /^(DEPOSITS?|WITHDRAWALS?|CREDITS?|DEBITS?)\s+(AND\s+OTHER\s+)?(CREDITS?|DEBITS?)/i,
+      /^(DEPOSITS?|WITHDRAWALS?|TRANSFERS?)\s+SUMMARY/i,
+      /^TRANSACTION\s+SUMMARY/i,
+      /^ACCOUNT\s+SUMMARY/i,
+      
+      // Amount-only summary lines (lines with only amounts and minimal text)
+      /^[\s\$\d,.-]+$/,  // Lines with only amounts and basic formatting
+      /^\$[\d,]+\.?\d{0,2}$/, // Just a dollar amount
+      /^\(\$?[\d,]+\.?\d{0,2}\)$/, // Parenthetical amounts (accounting format)
+      
+      // Balance calculation formats
+      /BALANCE\s*[:.-]?\s*\$?\d/i,
+      /^AVAILABLE\s+(BALANCE|CREDIT)/i,
+      /^CURRENT\s+BALANCE/i,
+      /^OUTSTANDING\s+BALANCE/i,
+      
+      // Summary indicators followed by amounts
+      /^(NUMBER\s+OF\s+)?(DEPOSITS?|WITHDRAWALS?|TRANSACTIONS?|ITEMS?)\s*[:.-]?\s*\d+/i,
+      /^\d+\s+(DEPOSITS?|WITHDRAWALS?|TRANSACTIONS?|ITEMS?)/i,
+      
+      // Fee summaries
+      /^(SERVICE\s+)?FEES?\s+(TOTAL|SUMMARY)/i,
+      /^TOTAL\s+(SERVICE\s+)?FEES?/i,
+      /^(MONTHLY|ANNUAL|QUARTERLY)\s+(FEE|CHARGE)/i,
+      
+      // Bank-specific summary formats
+      /^(BANK\s+OF\s+AMERICA|BOA)\s+(TOTAL|SUMMARY)/i,
+      /^STATEMENT\s+(TOTAL|SUMMARY|PERIOD)/i,
+      
+      // Multi-word totals that might be split across parsing
+      /TOTAL.*\$[\d,]+\.?\d{0,2}/i,
+      /\$[\d,]+\.?\d{0,2}.*TOTAL/i,
+      
+      // Year-to-date and period summaries
+      /^(YTD|YEAR\s+TO\s+DATE|MONTHLY|QUARTERLY)\s+(TOTAL|SUMMARY)/i,
+      
+      // Check/Card summaries
+      /^(CARD|CHECK|ATM|ONLINE)\s+(TOTAL|SUMMARY)/i,
+      /^SUBTOTAL\s+FOR\s+(CARD|CHECK)\s+ACCOUNT/i,
+    ];
+    
+    // Check if line matches any summary pattern
+    if (summaryPatterns.some(pattern => pattern.test(line))) {
+      return true;
+    }
+    
+    // Additional heuristic: Lines that start with amount indicators and contain summary keywords
+    const amountStartPattern = /^[\s\$\(]*[\d,]+\.?\d{0,2}/;
+    const containsSummaryKeyword = /(TOTAL|SUBTOTAL|BALANCE|SUMMARY|DEPOSITS?|WITHDRAWALS?|FEES?)/i;
+    
+    if (amountStartPattern.test(line) && containsSummaryKeyword.test(line)) {
+      return true;
+    }
+    
+    // Standard non-transaction line patterns
     const skipPatterns = [
       // Account headers and footers
-      /^(ACCOUNT|STATEMENT|BALANCE|TOTAL|SUBTOTAL)/i,
+      /^(ACCOUNT|STATEMENT)/i,
       /^(PAGE|CONTINUED|PREVIOUS|NEXT)/i,
-      /^(BANK OF AMERICA|MEMBER FDIC)/i,
-      /^[-=*\s]+$/, // Lines with only separators
-      /^\s*$/, // Empty lines
-      /^(DEPOSITS|WITHDRAWALS|CHECKS|FEES)\s+(and\s+other\s+)?(credits|debits)/i,
-      /^(BEGINNING|ENDING)\s+(BALANCE|TOTAL)/i,
+      /^(BANK\s+OF\s+AMERICA|MEMBER\s+FDIC)/i,
+      
       // Bank statement headers
-      /^[A-Z\s]+LLC\s*!\s*Account\s*#/i, // Company name + account header
-      /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,\s+\d{4}\s+to\s+/i, // Date range headers
-      /^Your\s+(checking|savings)\s+account\s*Page\s*\d+\s*of\s*\d+/i, // Page headers
+      /^[A-Z\s]+LLC\s*!\s*Account\s*#/i,
+      /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,\s+\d{4}\s+to\s+/i,
+      /^Your\s+(checking|savings)\s+account\s*Page\s*\d+\s*of\s*\d+/i,
       /^Page\s*\d+\s*of\s*\d+/i,
-      // Section headers
+      
+      // Column headers
       /^Date\s+(Transaction\s+)?[Dd]escription\s+Amount$/i,
       /^Date\s+Description\s+Amount$/i,
-      /^Service\s+fees$/i,
+      /^Transaction\s+Details/i,
+      
+      // Section dividers and footers
+      /continued\s+on\s+the\s+next\s+page/i,
       /^Daily\s+ledger\s+balances$/i,
-      // Subtotal lines
-      /^Subtotal\s+for\s+card\s+account/i,
-      /^Total\s+(deposits|withdrawals|service\s+fees)/i,
-      // Lines that are clearly not transactions
-      /continued\s+on\s+the\s+next\s+page/i
+      /^Service\s+fees$/i,
+      
+      // Legal and regulatory text
+      /MEMBER\s+FDIC/i,
+      /EQUAL\s+HOUSING/i,
     ];
 
     return skipPatterns.some(pattern => pattern.test(line));

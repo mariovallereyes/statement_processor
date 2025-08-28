@@ -66,6 +66,40 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
   }
 
   /**
+   * Detect and reject PDF summary totals before classification
+   */
+  private isSummaryTotal(transaction: Transaction): boolean {
+    const desc = transaction.description.toUpperCase();
+    
+    // Summary/Total indicators in description
+    const summaryIndicators = [
+      'TOTAL', 'SUBTOTAL', 'SUB-TOTAL', 'GRAND TOTAL', 'SUMMARY',
+      'BALANCE', 'BEGINNING BALANCE', 'ENDING BALANCE', 'CURRENT BALANCE', 'AVAILABLE BALANCE',
+      'DEPOSITS TOTAL', 'WITHDRAWALS TOTAL', 'CREDITS TOTAL', 'DEBITS TOTAL',
+      'NUMBER OF DEPOSITS', 'NUMBER OF WITHDRAWALS', 'NUMBER OF TRANSACTIONS',
+      'SERVICE FEES TOTAL', 'MONTHLY FEE TOTAL', 'QUARTERLY FEE TOTAL',
+      'STATEMENT TOTAL', 'ACCOUNT SUMMARY', 'TRANSACTION SUMMARY'
+    ];
+    
+    // Check if description contains summary indicators
+    if (summaryIndicators.some(indicator => desc.includes(indicator))) {
+      return true;
+    }
+    
+    // Check for amount-only descriptions (likely summary totals)
+    if (desc.trim().match(/^[\$\d,\.\s\(\)-]+$/)) {
+      return true;
+    }
+    
+    // Check for very short descriptions with round amounts (often totals)
+    if (desc.trim().length < 10 && transaction.amount % 100 === 0 && transaction.amount > 1000) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
    * Enhanced merchant pattern recognition for better accuracy
    */
   private recognizeMerchantPatterns(description: string): { category: string; confidence: number } | null {
@@ -122,8 +156,21 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
 
   /**
    * Classify transaction with AI model fallback
+   * CRITICAL: Rejects PDF summary totals before processing
    */
   public async classifyTransaction(transaction: Transaction): Promise<ClassificationResult> {
+    // FIRST: Check if this is a summary/total transaction - reject immediately
+    if (this.isSummaryTotal(transaction)) {
+      return {
+        transactionId: transaction.id,
+        category: 'SUMMARY_TOTAL_REJECTED',
+        subcategory: 'PDF Summary',
+        confidence: 1.0,
+        reasoning: ['Transaction identified as PDF summary total - automatically rejected'],
+        suggestedRules: []
+      };
+    }
+
     const context: ErrorContext = {
       component: 'TransactionClassificationService',
       operation: 'classifyTransaction',
