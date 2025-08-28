@@ -25,26 +25,49 @@ export class EnhancedTransactionClassificationService {
    */
   private recognizeMerchantPatterns(description: string): { category: string; confidence: number } | null {
     const patterns = [
-      // Transportation
+      // Bank of America specific transfers and internal transactions
+      { patterns: ['ZELLE TRANSFER'], category: 'Transfer', confidence: 0.98 },
+      { patterns: ['ONLINE BANKING TRANSFER'], category: 'Transfer', confidence: 0.98 },
+      { patterns: ['PMNT SENT'], category: 'Transfer', confidence: 0.95 },
+      
+      // Bank of America recurring charges
+      { patterns: ['RECURRING CKCD'], category: 'Recurring/Subscription', confidence: 0.85 },
+      
+      // Banking fees - highest confidence
+      { patterns: ['INTERNATIONAL TRANSACTION FEE', 'WIRE TRANSFER FEE', 'ATM FEE'], category: 'Banking/Fees', confidence: 0.98 },
+      
+      // Transportation services
       { patterns: ['BIRD*', 'BOLT.EU', 'UBER', 'LYFT'], category: 'Transportation', confidence: 0.95 },
-      // Money Transfer
+      
+      // Money Transfer Services
       { patterns: ['REMITLY', 'WESTERN UNION', 'MONEYGRAM', 'WISE'], category: 'Transfer', confidence: 0.95 },
-      // Software/Business
+      
+      // Software/Business services
       { patterns: ['WIX.COM', 'GOOGLE', 'MICROSOFT', 'ADOBE'], category: 'Business/Software', confidence: 0.9 },
-      // Banking/Fees
-      { patterns: ['INTERNATIONAL TRANSACTION FEE', 'WIRE TRANSFER FEE', 'ATM FEE'], category: 'Banking/Fees', confidence: 0.95 },
+      { patterns: ['HUSHED'], category: 'Business/Software', confidence: 0.9 },
+      { patterns: ['GCS LEADSALES'], category: 'Business/Marketing', confidence: 0.9 },
+      
       // Food & Dining
-      { patterns: ['JACK IN THE BOX', 'MCDONALDS', 'STARBUCKS'], category: 'Food & Dining', confidence: 0.9 },
-      // Telecommunications
-      { patterns: ['HUSHED'], category: 'Phone/Internet', confidence: 0.85 }
+      { patterns: ['JACK IN THE BOX', 'MCDONALDS', 'STARBUCKS'], category: 'Food & Dining', confidence: 0.9 }
     ];
 
     const upperDesc = description.toUpperCase();
     
     for (const group of patterns) {
       for (const pattern of group.patterns) {
-        if (upperDesc.includes(pattern)) {
-          return { category: group.category, confidence: group.confidence };
+        // Handle special patterns with regex or wildcards
+        if (pattern.includes('*')) {
+          // Convert wildcard to regex
+          const regexPattern = pattern.replace(/\*/g, '.*');
+          const regex = new RegExp(regexPattern, 'i');
+          if (regex.test(upperDesc)) {
+            return { category: group.category, confidence: group.confidence };
+          }
+        } else {
+          // Simple string inclusion
+          if (upperDesc.includes(pattern)) {
+            return { category: group.category, confidence: group.confidence };
+          }
         }
       }
     }
@@ -79,7 +102,7 @@ export class EnhancedTransactionClassificationService {
 
       // First try enhanced pattern recognition
       const patternResult = this.recognizeMerchantPatterns(transaction.description);
-      if (patternResult && patternResult.confidence > 0.8) {
+      if (patternResult && patternResult.confidence > 0.6) {
         result = {
           transactionId: transaction.id,
           category: patternResult.category,

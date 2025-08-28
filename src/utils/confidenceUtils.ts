@@ -4,13 +4,13 @@ export const calculateOverallConfidence = (scores: number[]): number => {
 };
 
 export const isHighConfidence = (confidence: number): boolean => {
-  return confidence >= 0.95;
+  return confidence >= 0.85;
 };
 
 export const isMediumConfidence = (confidence: number): boolean => {
-  return confidence >= 0.8 && confidence < 0.95;
+  return confidence >= 0.6 && confidence < 0.85;
 };
 
 export const isLowConfidence = (confidence: number): boolean => {
-  return confidence < 0.8;
+  return confidence < 0.6;
 };
