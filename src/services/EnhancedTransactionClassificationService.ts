@@ -21,6 +21,52 @@ export class EnhancedTransactionClassificationService {
   }
 
   /**
+   * Real AI classification using OpenAI
+   */
+  private async classifyWithAI(transaction: Transaction, context?: any): Promise<ClassificationResult> {
+    const prompt = `Classify this bank transaction into a category:
+Transaction: ${transaction.description}
+Amount: ${transaction.amount < 0 ? '-' : '+'}$${Math.abs(transaction.amount).toFixed(2)}
+
+Categories: Transportation, Transfer, Business/Software, Business/Marketing, Banking/Fees, Food & Dining, Shopping, Recurring/Subscription, Income/Deposit, Healthcare, Entertainment, Utilities, Other
+
+Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning": ["explanation"]}`;
+
+    try {
+      // Use fetch to call OpenAI API directly (client-side)
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.1,
+          max_tokens: 150
+        })
+      });
+
+      if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
+      
+      const data = await response.json();
+      const aiResult = JSON.parse(data.choices[0].message.content);
+      
+      return {
+        transactionId: transaction.id,
+        category: aiResult.category,
+        confidence: aiResult.confidence,
+        reasoning: aiResult.reasoning,
+        suggestedRules: []
+      };
+    } catch (error) {
+      console.warn('AI classification failed, using patterns:', error);
+      return this.classifyWithRules(transaction, context);
+    }
+  }
+
+  /**
    * Enhanced merchant pattern recognition for better accuracy
    */
   private recognizeMerchantPatterns(description: string): { category: string; confidence: number } | null {
