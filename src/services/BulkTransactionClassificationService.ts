@@ -524,8 +524,12 @@ Focus on accuracy and consistency across similar transactions.`;
     const words1 = new Set(desc1.split(/\s+/).filter(w => w.length > 3));
     const words2 = new Set(desc2.split(/\s+/).filter(w => w.length > 3));
     
-    const intersection = new Set([...words1].filter(w => words2.has(w)));
-    const union = new Set([...words1, ...words2]);
+    // Convert Sets to Arrays for compatibility
+    const words1Array = Array.from(words1);
+    const words2Array = Array.from(words2);
+    
+    const intersection = new Set(words1Array.filter(w => words2.has(w)));
+    const union = new Set(words1Array.concat(words2Array));
     
     return union.size > 0 ? intersection.size / union.size : 0;
   }
