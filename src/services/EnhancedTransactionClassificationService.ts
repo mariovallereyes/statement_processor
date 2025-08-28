@@ -191,76 +191,9 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
   }
 
   /**
-   * Classify multiple transactions with batch processing and error resilience
-   */
-  public async classifyTransactions(transactions: Transaction[]): Promise<ClassificationResult[]> {
-    const results: ClassificationResult[] = [];
-    const errors: Array<{ transaction: Transaction; error: Error }> = [];
-
-    // Process in batches to avoid memory issues
-    const batchSize = 10;
-    for (let i = 0; i < transactions.length; i += batchSize) {
-      const batch = transactions.slice(i, i + batchSize);
-      
-      const batchPromises = batch.map(async (transaction) => {
-        try {
-          return await this.classifyTransaction(transaction);
-        } catch (error) {
-          errors.push({ transaction, error: error as Error });
-          // Return fallback classification for failed transactions
-          return this.getFallbackClassification(transaction);
-        }
-      });
-
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
-
-      // Small delay between batches to prevent overwhelming the system
-      if (i + batchSize < transactions.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-
-    // Log batch processing errors
-    if (errors.length > 0) {
-      console.warn(`Classification errors occurred for ${errors.length} transactions:`, errors);
-    }
-
-    return results;
-  }
-
-  /**
-   * Classify using AI model (simulated - would use actual AI model)
-   */
-  private async classifyWithAI(transaction: Transaction, context: ErrorContext): Promise<ClassificationResult> {
-    // Simulate AI model processing
-    if (!this.aiModelAvailable) {
-      throw new Error('AI model is not available');
-    }
-
-    // Simulate potential AI model failures
-    if (Math.random() < 0.05) { // 5% failure rate for testing
-      throw new Error('AI model inference failed');
-    }
-
-    // For now, delegate to rule-based classification but with higher confidence
-    const ruleResult = this.baseService.classifyTransaction(transaction);
-    
-    // Enhance with AI-like features
-    return {
-      ...ruleResult,
-      confidence: Math.min(ruleResult.confidence * 1.2, 1.0), // Boost confidence for AI
-      reasoning: [
-        'AI model analysis',
-        ...ruleResult.reasoning
-      ]
-    };
-  }
-
-  /**
    * Classify using rule-based system (fallback)
    */
-  private classifyWithRules(transaction: Transaction, context: ErrorContext): ClassificationResult {
+  private classifyWithRules(transaction: Transaction, context?: ErrorContext): ClassificationResult {
     try {
       const result = this.baseService.classifyTransaction(transaction);
       
@@ -318,14 +251,7 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
    */
   private async initializeAIModel(): Promise<void> {
     try {
-      // Simulate model loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate potential initialization failure
-      if (Math.random() < 0.1) { // 10% failure rate for testing
-        throw new Error('Failed to load AI classification model');
-      }
-      
+      // Just set AI as available - no simulation needed for real OpenAI
       this.aiModelAvailable = true;
       console.log('AI classification model loaded successfully');
       
@@ -355,148 +281,13 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
     return 0.5;
   }
 
-  /**
-   * Add user rule with error handling
-   */
-  public addUserRule(rule: Rule): void {
-    try {
-      this.baseService.addUserRule(rule);
-      // Clear cache when rules change
-      this.classificationCache.clear();
-    } catch (error) {
-      const context: ErrorContext = {
-        component: 'TransactionClassificationService',
-        operation: 'addUserRule',
-        timestamp: new Date()
-      };
-
-      const processingError = this.errorHandler.createAIModelError(
-        error as Error,
-        context,
-        'classification'
-      );
-
-      throw processingError;
-    }
-  }
-
-  /**
-   * Remove user rule with error handling
-   */
-  public removeUserRule(ruleId: string): void {
-    try {
-      this.baseService.removeUserRule(ruleId);
-      // Clear cache when rules change
-      this.classificationCache.clear();
-    } catch (error) {
-      const context: ErrorContext = {
-        component: 'TransactionClassificationService',
-        operation: 'removeUserRule',
-        timestamp: new Date()
-      };
-
-      const processingError = this.errorHandler.createAIModelError(
-        error as Error,
-        context,
-        'classification'
-      );
-
-      throw processingError;
-    }
-  }
-
-  /**
-   * Get service status and capabilities
-   */
-  public getStatus(): {
-    aiModelAvailable: boolean;
-    fallbackMode: boolean;
-    cacheSize: number;
-    capabilities: string[];
-    limitations: string[];
-  } {
-    return {
-      aiModelAvailable: this.aiModelAvailable,
-      fallbackMode: this.fallbackMode,
-      cacheSize: this.classificationCache.size,
-      capabilities: [
-        this.aiModelAvailable ? 'AI-powered classification' : 'Rule-based classification',
-        'Custom rule creation',
-        'Batch processing',
-        'Result caching',
-        'Automatic fallback'
-      ],
-      limitations: this.fallbackMode ? [
-        'Reduced classification accuracy',
-        'No confidence scoring from AI',
-        'Limited learning capabilities',
-        'Manual review recommended'
-      ] : []
-    };
-  }
-
-  /**
-   * Force switch to fallback mode
-   */
-  public enableFallbackMode(): void {
-    this.fallbackMode = true;
-    this.classificationCache.clear();
-    console.log('Switched to rule-based classification mode');
-  }
-
-  /**
-   * Try to re-enable AI mode
-   */
-  public async tryEnableAIMode(): Promise<boolean> {
-    try {
-      await this.initializeAIModel();
-      this.fallbackMode = false;
-      this.classificationCache.clear();
-      return this.aiModelAvailable;
-    } catch (error) {
-      console.warn('Failed to re-enable AI mode:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Clear classification cache
-   */
-  public clearCache(): void {
-    this.classificationCache.clear();
-  }
-
-  /**
-   * Get classification statistics
-   */
-  public getStatistics(): {
-    totalClassifications: number;
-    cacheHitRate: number;
-    averageConfidence: number;
-    fallbackUsage: number;
-  } {
-    // This would be implemented with actual statistics tracking
-    return {
-      totalClassifications: this.classificationCache.size,
-      cacheHitRate: 0.3, // 30% cache hit rate
-      averageConfidence: this.fallbackMode ? 0.6 : 0.8,
-      fallbackUsage: this.fallbackMode ? 1.0 : 0.1
-    };
-  }
-
-  /**
-   * Delegate methods to base service
-   */
+  // Delegate methods to base service
   public getUserRules(): Rule[] {
     return this.baseService.getUserRules();
   }
 
   public getAvailableCategories(): string[] {
     return this.baseService.getAvailableCategories();
-  }
-
-  public calculateConfidenceScore(transaction: Transaction, classification: ClassificationResult): number {
-    return this.baseService.calculateConfidenceScore(transaction, classification);
   }
 }
 
