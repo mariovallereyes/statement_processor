@@ -41,7 +41,7 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
           'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-5-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
           max_tokens: 150
