@@ -137,14 +137,11 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
 
   // Bulk Analysis Handlers
   const handleBulkAnalysis = async () => {
-    const lowConfidenceTransactions = transactionsWithClassification.filter(t => 
-      t.extractionConfidence < 0.5 || 
-      t.classificationConfidence < 0.5 ||
-      (t.classificationResult?.confidence || 0) < 0.5
-    );
+    // Force analysis on ALL unvalidated transactions, regardless of confidence
+    const unvalidatedTransactions = transactionsWithClassification.filter(t => !t.userValidated);
 
-    if (lowConfidenceTransactions.length === 0) {
-      alert('No transactions need AI analysis. All transactions have sufficient confidence scores.');
+    if (unvalidatedTransactions.length === 0) {
+      alert('All transactions have been validated. No AI analysis needed.');
       return;
     }
 
@@ -158,7 +155,7 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
 
       // Start bulk analysis
       const result = await bulkTransactionClassificationService.analyzeBulkTransactions(
-        lowConfidenceTransactions,
+        unvalidatedTransactions,
         transactions, // Full context
         {
           includeHighConfidenceContext: true,
@@ -184,7 +181,7 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
         progress: 0,
         message: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         processedCount: 0,
-        totalCount: lowConfidenceTransactions.length
+        totalCount: unvalidatedTransactions.length
       });
     } finally {
       setIsBulkAnalyzing(false);
@@ -198,6 +195,7 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
     bulkAnalysisResult.processedTransactions.forEach(result => {
       const updates: Partial<Transaction> = {
         category: result.category,
+        subcategory: result.subcategory || '',
         confidence: result.confidence,
         classificationConfidence: result.confidence,
         userValidated: result.confidence > 0.85, // Auto-validate high confidence results
@@ -219,11 +217,7 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
     setShowBulkResults(false);
   };
 
-  const lowConfidenceCount = transactionsWithClassification.filter(t => 
-    t.extractionConfidence < 0.5 || 
-    t.classificationConfidence < 0.5 ||
-    (t.classificationResult?.confidence || 0) < 0.5
-  ).length;
+  const needsAnalysisCount = transactionsWithClassification.filter(t => !t.userValidated).length;
 
   const unvalidatedCount = transactionsWithClassification.filter(t => !t.userValidated).length;
 
@@ -244,8 +238,8 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
             <span className="summary-value">{transactions.length}</span>
           </div>
           <div className="summary-item">
-            <span className="summary-label">Low Confidence:</span>
-            <span className="summary-value warning">{lowConfidenceCount}</span>
+            <span className="summary-label">Needs AI Analysis:</span>
+            <span className="summary-value warning">{needsAnalysisCount}</span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Unvalidated:</span>
@@ -259,7 +253,7 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
               Filter:
               <select value={filterBy} onChange={(e) => setFilterBy(e.target.value as any)}>
                 <option value="all">All Transactions</option>
-                <option value="low-confidence">Low Confidence ({lowConfidenceCount})</option>
+                <option value="low-confidence">Low Confidence ({needsAnalysisCount})</option>
                 <option value="unvalidated">Unvalidated ({unvalidatedCount})</option>
               </select>
             </label>
@@ -294,15 +288,15 @@ export const TransactionReview: React.FC<TransactionReviewProps> = ({
         </div>
       </div>
 
-      {(processingDecision.requiresReview.length > 0 || lowConfidenceCount > 0) && (
+      {(processingDecision.requiresReview.length > 0 || needsAnalysisCount > 0) && (
         <div className="review-alerts">
           <div className="alerts-header">
             <h3>Items Requiring Attention</h3>
-            {lowConfidenceCount > 0 && (
+            {needsAnalysisCount > 0 && (
               <div className="ai-analysis-section">
                 <div className="ai-analysis-summary">
                   <span className="confidence-badge low">
-                    {lowConfidenceCount} transactions need AI analysis
+                    {needsAnalysisCount} transactions ready for AI analysis
                   </span>
                   {!isBulkAnalyzing && !showBulkResults && (
                     <button 

@@ -16,75 +16,169 @@ export interface CategorySelectorProps {
   selectedSubcategory?: string;
   onChange: (category: string, subcategory?: string) => void;
   disabled?: boolean;
+  aiSuggestion?: {
+    category: string;
+    subcategory?: string;
+    confidence: number;
+  };
 }
 
-// Standard accounting categories for bookkeeping
+// AI-compatible transaction categories for bank statement processing
 const STANDARD_CATEGORIES: Category[] = [
   {
-    id: 'income',
-    name: 'Income',
+    id: 'Transportation',
+    name: 'Transportation',
     subcategories: [
-      { id: 'sales', name: 'Sales Revenue' },
-      { id: 'services', name: 'Service Revenue' },
-      { id: 'interest', name: 'Interest Income' },
-      { id: 'other-income', name: 'Other Income' }
+      { id: 'Gas & Fuel', name: 'Gas & Fuel' },
+      { id: 'Public Transit', name: 'Public Transit' },
+      { id: 'Rideshare/Taxi', name: 'Rideshare/Taxi' },
+      { id: 'Parking', name: 'Parking' },
+      { id: 'Vehicle Maintenance', name: 'Vehicle Maintenance' },
+      { id: 'Other Transport', name: 'Other Transport' }
     ]
   },
   {
-    id: 'expenses',
-    name: 'Expenses',
+    id: 'Transfer',
+    name: 'Transfer',
     subcategories: [
-      { id: 'office-supplies', name: 'Office Supplies' },
-      { id: 'utilities', name: 'Utilities' },
-      { id: 'rent', name: 'Rent' },
-      { id: 'insurance', name: 'Insurance' },
-      { id: 'professional-services', name: 'Professional Services' },
-      { id: 'marketing', name: 'Marketing & Advertising' },
-      { id: 'travel', name: 'Travel & Entertainment' },
-      { id: 'meals', name: 'Meals & Entertainment' },
-      { id: 'equipment', name: 'Equipment' },
-      { id: 'software', name: 'Software & Subscriptions' },
-      { id: 'bank-fees', name: 'Bank Fees' },
-      { id: 'other-expenses', name: 'Other Expenses' }
+      { id: 'Account Transfer', name: 'Account Transfer' },
+      { id: 'Person-to-Person', name: 'Person-to-Person' },
+      { id: 'Wire Transfer', name: 'Wire Transfer' },
+      { id: 'Check Deposit', name: 'Check Deposit' },
+      { id: 'Other Transfer', name: 'Other Transfer' }
     ]
   },
   {
-    id: 'cost-of-goods',
-    name: 'Cost of Goods Sold',
+    id: 'Business/Software',
+    name: 'Business/Software',
     subcategories: [
-      { id: 'materials', name: 'Raw Materials' },
-      { id: 'inventory', name: 'Inventory Purchases' },
-      { id: 'shipping', name: 'Shipping & Freight' },
-      { id: 'manufacturing', name: 'Manufacturing Costs' }
+      { id: 'Software/SaaS', name: 'Software/SaaS' },
+      { id: 'Development Tools', name: 'Development Tools' },
+      { id: 'Cloud Services', name: 'Cloud Services' },
+      { id: 'Domain/Hosting', name: 'Domain/Hosting' },
+      { id: 'Business Apps', name: 'Business Apps' },
+      { id: 'Other Business', name: 'Other Business' }
     ]
   },
   {
-    id: 'assets',
-    name: 'Assets',
+    id: 'Business/Marketing',
+    name: 'Business/Marketing',
     subcategories: [
-      { id: 'equipment-purchase', name: 'Equipment Purchase' },
-      { id: 'furniture', name: 'Furniture & Fixtures' },
-      { id: 'vehicles', name: 'Vehicles' },
-      { id: 'investments', name: 'Investments' }
+      { id: 'Advertising', name: 'Advertising' },
+      { id: 'Social Media', name: 'Social Media' },
+      { id: 'Email Marketing', name: 'Email Marketing' },
+      { id: 'Analytics', name: 'Analytics' },
+      { id: 'Design Tools', name: 'Design Tools' },
+      { id: 'Other Marketing', name: 'Other Marketing' }
     ]
   },
   {
-    id: 'liabilities',
-    name: 'Liabilities',
+    id: 'Banking/Fees',
+    name: 'Banking/Fees',
     subcategories: [
-      { id: 'loan-payment', name: 'Loan Payment' },
-      { id: 'credit-card', name: 'Credit Card Payment' },
-      { id: 'accounts-payable', name: 'Accounts Payable' },
-      { id: 'taxes-payable', name: 'Taxes Payable' }
+      { id: 'Account Fees', name: 'Account Fees' },
+      { id: 'ATM Fees', name: 'ATM Fees' },
+      { id: 'Overdraft Fees', name: 'Overdraft Fees' },
+      { id: 'Wire Fees', name: 'Wire Fees' },
+      { id: 'Foreign Transaction', name: 'Foreign Transaction' },
+      { id: 'Other Bank Fees', name: 'Other Bank Fees' }
     ]
   },
   {
-    id: 'equity',
-    name: 'Owner\'s Equity',
+    id: 'Food & Dining',
+    name: 'Food & Dining',
     subcategories: [
-      { id: 'owner-investment', name: 'Owner Investment' },
-      { id: 'owner-draw', name: 'Owner Draw' },
-      { id: 'retained-earnings', name: 'Retained Earnings' }
+      { id: 'Restaurants', name: 'Restaurants' },
+      { id: 'Fast Food', name: 'Fast Food' },
+      { id: 'Coffee Shops', name: 'Coffee Shops' },
+      { id: 'Groceries', name: 'Groceries' },
+      { id: 'Delivery', name: 'Delivery' },
+      { id: 'Other Food', name: 'Other Food' }
+    ]
+  },
+  {
+    id: 'Shopping',
+    name: 'Shopping',
+    subcategories: [
+      { id: 'Retail', name: 'Retail' },
+      { id: 'Online Shopping', name: 'Online Shopping' },
+      { id: 'Clothing', name: 'Clothing' },
+      { id: 'Electronics', name: 'Electronics' },
+      { id: 'Home & Garden', name: 'Home & Garden' },
+      { id: 'Other Shopping', name: 'Other Shopping' }
+    ]
+  },
+  {
+    id: 'Recurring/Subscription',
+    name: 'Recurring/Subscription',
+    subcategories: [
+      { id: 'Streaming Services', name: 'Streaming Services' },
+      { id: 'Software Subscriptions', name: 'Software Subscriptions' },
+      { id: 'Utilities', name: 'Utilities' },
+      { id: 'Insurance', name: 'Insurance' },
+      { id: 'Memberships', name: 'Memberships' },
+      { id: 'Other Recurring', name: 'Other Recurring' }
+    ]
+  },
+  {
+    id: 'Income/Deposit',
+    name: 'Income/Deposit',
+    subcategories: [
+      { id: 'Salary', name: 'Salary' },
+      { id: 'Freelance', name: 'Freelance' },
+      { id: 'Investment Income', name: 'Investment Income' },
+      { id: 'Refund', name: 'Refund' },
+      { id: 'Government Payment', name: 'Government Payment' },
+      { id: 'Other Income', name: 'Other Income' }
+    ]
+  },
+  {
+    id: 'Healthcare',
+    name: 'Healthcare',
+    subcategories: [
+      { id: 'Medical', name: 'Medical' },
+      { id: 'Dental', name: 'Dental' },
+      { id: 'Pharmacy', name: 'Pharmacy' },
+      { id: 'Insurance', name: 'Insurance' },
+      { id: 'Therapy', name: 'Therapy' },
+      { id: 'Other Healthcare', name: 'Other Healthcare' }
+    ]
+  },
+  {
+    id: 'Entertainment',
+    name: 'Entertainment',
+    subcategories: [
+      { id: 'Movies', name: 'Movies' },
+      { id: 'Gaming', name: 'Gaming' },
+      { id: 'Sports', name: 'Sports' },
+      { id: 'Hobbies', name: 'Hobbies' },
+      { id: 'Books/Media', name: 'Books/Media' },
+      { id: 'Other Entertainment', name: 'Other Entertainment' }
+    ]
+  },
+  {
+    id: 'Utilities',
+    name: 'Utilities',
+    subcategories: [
+      { id: 'Electric', name: 'Electric' },
+      { id: 'Gas', name: 'Gas' },
+      { id: 'Water', name: 'Water' },
+      { id: 'Internet', name: 'Internet' },
+      { id: 'Phone', name: 'Phone' },
+      { id: 'Trash/Recycling', name: 'Trash/Recycling' },
+      { id: 'Other Utilities', name: 'Other Utilities' }
+    ]
+  },
+  {
+    id: 'Other',
+    name: 'Other',
+    subcategories: [
+      { id: 'Uncategorized', name: 'Uncategorized' },
+      { id: 'Charity', name: 'Charity' },
+      { id: 'Education', name: 'Education' },
+      { id: 'Travel', name: 'Travel' },
+      { id: 'Personal Care', name: 'Personal Care' },
+      { id: 'Other', name: 'Other' }
     ]
   }
 ];
@@ -93,7 +187,8 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   selectedCategory,
   selectedSubcategory,
   onChange,
-  disabled = false
+  disabled = false,
+  aiSuggestion
 }) => {
   const [categories, setCategories] = useState<Category[]>(STANDARD_CATEGORIES);
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
@@ -201,8 +296,48 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     setCustomSubcategoryName('');
   };
 
+  const handleApplyAISuggestion = () => {
+    if (aiSuggestion) {
+      onChange(aiSuggestion.category, aiSuggestion.subcategory);
+    }
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'high';
+    if (confidence >= 0.6) return 'medium';
+    return 'low';
+  };
+
   return (
     <div className="category-selector">
+      {aiSuggestion && (
+        <div className={`ai-suggestion-panel confidence-${getConfidenceColor(aiSuggestion.confidence)}`}>
+          <div className="suggestion-header">
+            <span className="ai-icon">🤖</span>
+            <span className="suggestion-label">AI Suggestion</span>
+            <span className={`confidence-badge ${getConfidenceColor(aiSuggestion.confidence)}`}>
+              {(aiSuggestion.confidence * 100).toFixed(0)}%
+            </span>
+          </div>
+          <div className="suggestion-content">
+            <strong>{aiSuggestion.category}</strong>
+            {aiSuggestion.subcategory && (
+              <>
+                <span className="separator"> › </span>
+                <span className="subcategory">{aiSuggestion.subcategory}</span>
+              </>
+            )}
+          </div>
+          <button
+            onClick={handleApplyAISuggestion}
+            className="apply-suggestion-btn"
+            disabled={disabled}
+          >
+            ✓ Apply Suggestion
+          </button>
+        </div>
+      )}
+      
       <div className="category-selection">
         <select
           value={selectedCategory || ''}

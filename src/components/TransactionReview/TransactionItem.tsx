@@ -172,6 +172,11 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
             selectedSubcategory={isEditing ? editedTransaction.subcategory : transaction.subcategory}
             onChange={handleCategoryChange}
             disabled={!isEditing && transaction.userValidated}
+            aiSuggestion={classificationResult && !transaction.userValidated ? {
+              category: classificationResult.category,
+              subcategory: classificationResult.subcategory,
+              confidence: classificationResult.confidence
+            } : undefined}
           />
         </div>
 

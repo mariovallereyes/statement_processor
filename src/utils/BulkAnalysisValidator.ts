@@ -24,6 +24,22 @@ export class BulkAnalysisValidator {
     'Income/Deposit', 'Healthcare', 'Entertainment', 'Utilities', 'Other'
   ];
 
+  private readonly VALID_SUBCATEGORIES: Record<string, string[]> = {
+    'Transportation': ['Gas & Fuel', 'Public Transit', 'Rideshare/Taxi', 'Parking', 'Vehicle Maintenance', 'Other Transport'],
+    'Transfer': ['Account Transfer', 'Person-to-Person', 'Wire Transfer', 'Check Deposit', 'Other Transfer'],
+    'Business/Software': ['Software/SaaS', 'Development Tools', 'Cloud Services', 'Domain/Hosting', 'Business Apps', 'Other Business'],
+    'Business/Marketing': ['Advertising', 'Social Media', 'Email Marketing', 'Analytics', 'Design Tools', 'Other Marketing'],
+    'Banking/Fees': ['Account Fees', 'ATM Fees', 'Overdraft Fees', 'Wire Fees', 'Foreign Transaction', 'Other Bank Fees'],
+    'Food & Dining': ['Restaurants', 'Fast Food', 'Coffee Shops', 'Groceries', 'Delivery', 'Other Food'],
+    'Shopping': ['Retail', 'Online Shopping', 'Clothing', 'Electronics', 'Home & Garden', 'Other Shopping'],
+    'Recurring/Subscription': ['Streaming Services', 'Software Subscriptions', 'Utilities', 'Insurance', 'Memberships', 'Other Recurring'],
+    'Income/Deposit': ['Salary', 'Freelance', 'Investment Income', 'Refund', 'Government Payment', 'Other Income'],
+    'Healthcare': ['Medical', 'Dental', 'Pharmacy', 'Insurance', 'Therapy', 'Other Healthcare'],
+    'Entertainment': ['Movies', 'Gaming', 'Sports', 'Hobbies', 'Books/Media', 'Other Entertainment'],
+    'Utilities': ['Electric', 'Gas', 'Water', 'Internet', 'Phone', 'Trash/Recycling', 'Other Utilities'],
+    'Other': ['Uncategorized', 'Charity', 'Education', 'Travel', 'Personal Care', 'Other']
+  };
+
   private readonly VALID_PATTERN_TYPES = [
     'recurring', 'merchant_variation', 'category_pattern', 'amount_pattern'
   ];
@@ -120,6 +136,7 @@ export class BulkAnalysisValidator {
     const results: BulkClassificationResult[] = (validatedData.classifications || []).map((c: any) => ({
       transactionId: c.id,
       category: this.sanitizeCategory(c.category),
+      subcategory: this.sanitizeSubcategory(c.category, c.subcategory),
       confidence: this.sanitizeConfidence(c.confidence),
       reasoning: Array.isArray(c.reasoning) ? c.reasoning : [c.reasoning || 'No reasoning provided'],
       suggestedRules: [],
@@ -241,6 +258,14 @@ export class BulkAnalysisValidator {
         warnings.push(`${prefix} Invalid category '${c.category}', will use 'Other'`);
       }
 
+      // Validate subcategory
+      if (c.subcategory && c.category) {
+        const validSubcats = this.VALID_SUBCATEGORIES[c.category] || [];
+        if (!validSubcats.includes(c.subcategory)) {
+          warnings.push(`${prefix} Invalid subcategory '${c.subcategory}' for category '${c.category}'`);
+        }
+      }
+
       // Confidence validation
       if (typeof c.confidence !== 'number') {
         warnings.push(`${prefix} Invalid confidence, using 0.5`);
@@ -350,6 +375,20 @@ export class BulkAnalysisValidator {
 
   private sanitizeCategory(category: string): string {
     return this.VALID_CATEGORIES.includes(category) ? category : 'Other';
+  }
+
+  private sanitizeSubcategory(category: string, subcategory: string): string | undefined {
+    if (!subcategory) return undefined;
+    
+    const sanitizedCategory = this.sanitizeCategory(category);
+    const validSubcats = this.VALID_SUBCATEGORIES[sanitizedCategory] || [];
+    
+    if (validSubcats.includes(subcategory)) {
+      return subcategory;
+    }
+    
+    // Return first "Other" subcategory for the category as fallback
+    return validSubcats.find(sub => sub.startsWith('Other')) || validSubcats[0];
   }
 
   private sanitizeConfidence(confidence: any): number {

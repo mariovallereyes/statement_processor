@@ -42,6 +42,7 @@ export interface AnalysisChunk {
 }
 
 export interface BulkClassificationResult extends ClassificationResult {
+  subcategory?: string;
   merchantStandardized?: string;
   relatedTransactionIds?: string[];
   patternId?: string;

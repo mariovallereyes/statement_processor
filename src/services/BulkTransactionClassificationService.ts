@@ -309,8 +309,20 @@ TASK: Analyze these ${transactions.length} transactions collectively, looking fo
 - Temporal relationships (transfers followed by purchases)
 - Amount patterns indicating subscriptions or services
 
-AVAILABLE CATEGORIES:
-Transportation, Transfer, Business/Software, Business/Marketing, Banking/Fees, Food & Dining, Shopping, Recurring/Subscription, Income/Deposit, Healthcare, Entertainment, Utilities, Other
+AVAILABLE CATEGORIES WITH SUBCATEGORIES:
+• Transportation: Gas & Fuel, Public Transit, Rideshare/Taxi, Parking, Vehicle Maintenance, Other Transport
+• Transfer: Account Transfer, Person-to-Person, Wire Transfer, Check Deposit, Other Transfer  
+• Business/Software: Software/SaaS, Development Tools, Cloud Services, Domain/Hosting, Business Apps, Other Business
+• Business/Marketing: Advertising, Social Media, Email Marketing, Analytics, Design Tools, Other Marketing
+• Banking/Fees: Account Fees, ATM Fees, Overdraft Fees, Wire Fees, Foreign Transaction, Other Bank Fees
+• Food & Dining: Restaurants, Fast Food, Coffee Shops, Groceries, Delivery, Other Food
+• Shopping: Retail, Online Shopping, Clothing, Electronics, Home & Garden, Other Shopping
+• Recurring/Subscription: Streaming Services, Software Subscriptions, Utilities, Insurance, Memberships, Other Recurring  
+• Income/Deposit: Salary, Freelance, Investment Income, Refund, Government Payment, Other Income
+• Healthcare: Medical, Dental, Pharmacy, Insurance, Therapy, Other Healthcare
+• Entertainment: Movies, Gaming, Sports, Hobbies, Books/Media, Other Entertainment
+• Utilities: Electric, Gas, Water, Internet, Phone, Trash/Recycling, Other Utilities
+• Other: Uncategorized, Charity, Education, Travel, Personal Care, Other
 
 TRANSACTIONS TO CLASSIFY:
 ${transactionsToAnalyze}
@@ -321,6 +333,7 @@ Respond with JSON in this exact format:
     {
       "id": "transaction_id",
       "category": "category_name",
+      "subcategory": "specific_subcategory_name",
       "confidence": 0.95,
       "reasoning": ["specific reason for this classification"],
       "merchant_standardized": "standardized_merchant_name",
