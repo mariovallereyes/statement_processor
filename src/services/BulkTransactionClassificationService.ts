@@ -422,6 +422,7 @@ Focus on accuracy and consistency across similar transactions.`;
     if (!validation.isValid) {
       console.error('GPT-5 response validation failed:', validation.errors);
       console.warn('Validation warnings:', validation.warnings);
+      console.log('Raw GPT-5 response:', responseContent);
       
       // Create fallback results for failed validation
       const fallbackResult = bulkAnalysisValidator.createFallbackResults(
