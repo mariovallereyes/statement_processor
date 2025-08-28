@@ -242,6 +242,15 @@ export class BulkTransactionClassificationService {
   }> {
     const prompt = this.buildAdvancedPrompt(chunk, options);
     
+    console.log('OpenAI Request:', {
+      promptLength: prompt.length,
+      model: 'gpt-5-mini',
+      temperature: 0.1,
+      max_tokens: 4000,
+      chunkTransactionsCount: chunk.transactions.length
+    });
+    console.log('First 500 chars of prompt:', prompt.substring(0, 500));
+    
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -253,13 +262,20 @@ export class BulkTransactionClassificationService {
           model: 'gpt-5-mini',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
-          max_tokens: 4000,
+          max_completion_tokens: 4000,
           response_format: { type: 'json_object' }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('OpenAI API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText
+        });
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
