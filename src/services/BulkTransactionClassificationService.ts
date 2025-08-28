@@ -420,8 +420,10 @@ Focus on accuracy and consistency across similar transactions.`;
     );
 
     if (!validation.isValid) {
-      console.error('GPT-5 response validation failed:', validation.errors);
-      console.warn('Validation warnings:', validation.warnings);
+      console.error('GPT-5 response validation failed:');
+      validation.errors.forEach((error, i) => console.error(`  Error ${i+1}: ${error}`));
+      console.warn('Validation warnings:');
+      validation.warnings.forEach((warning, i) => console.warn(`  Warning ${i+1}: ${warning}`));
       console.log('Raw GPT-5 response:', responseContent);
       
       // Create fallback results for failed validation
