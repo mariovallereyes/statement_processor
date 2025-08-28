@@ -24,18 +24,26 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   maxFileSize = 50 * 1024 * 1024, // 50MB
   disabled = false
 }) => {
-  // Aggressive protection against extension interference
-  const [forceVisible, setForceVisible] = useState(true);
-  
   useEffect(() => {
-    // Force visibility check every 2 seconds
-    const visibilityCheck = setInterval(() => {
-      setForceVisible(prev => !prev);
-      setTimeout(() => setForceVisible(prev => !prev), 50);
-    }, 2000);
+    // Block extension interference more aggressively
+    const interval = setInterval(() => {
+      const uploadContainer = document.querySelector('.file-upload-container');
+      if (uploadContainer) {
+        const computed = window.getComputedStyle(uploadContainer);
+        if (computed.display === 'none' || computed.visibility === 'hidden' || computed.opacity === '0') {
+          // Force visibility
+          (uploadContainer as HTMLElement).style.setProperty('display', 'block', 'important');
+          (uploadContainer as HTMLElement).style.setProperty('visibility', 'visible', 'important');
+          (uploadContainer as HTMLElement).style.setProperty('opacity', '1', 'important');
+          (uploadContainer as HTMLElement).style.setProperty('z-index', '9999', 'important');
+          (uploadContainer as HTMLElement).style.setProperty('position', 'relative', 'important');
+        }
+      }
+    }, 100);
     
-    return () => clearInterval(visibilityCheck);
+    return () => clearInterval(interval);
   }, []);
+  
   const [uploadState, setUploadState] = useState<UploadState>({
     isDragOver: false,
     isUploading: false,

@@ -11,7 +11,6 @@ import { ErrorDisplay } from './components/ErrorHandling/ErrorDisplay';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ExtensionGuard } from './components/ExtensionGuard/ExtensionGuard';
 import { FallbackFileUpload } from './components/FileUpload/FallbackFileUpload';
-import { IFrameUpload } from './components/FileUpload/IFrameUpload';
 import {
   UploadResult,
   Transaction,
@@ -769,7 +768,7 @@ function App() {
           {/* File Upload Section */}
           {currentWorkflowState === 'initial' && (
             <div className="upload-section">
-              <IFrameUpload
+              <FileUpload
                 onFileSelect={handleFileSelect}
                 onError={handleError}
                 acceptedFormats={['.pdf', '.csv']}

@@ -138,6 +138,24 @@
 
     <script>
         (function() {
+            // Block extensions from interfering
+            if (window.chrome && window.chrome.runtime) {
+                console.log('Extension environment detected - implementing protection');
+                // Override problematic extension APIs
+                Object.defineProperty(window, 'chrome', {
+                    value: undefined,
+                    configurable: false,
+                    writable: false
+                });
+            }
+            
+            // Prevent extension content script injection
+            const originalObserve = MutationObserver.prototype.observe;
+            MutationObserver.prototype.observe = function() {
+                // Only allow our own observers
+                if (this._isExtension) return;
+                return originalObserve.apply(this, arguments);
+            };
             'use strict';
             
             const uploadArea = document.getElementById('uploadArea');
