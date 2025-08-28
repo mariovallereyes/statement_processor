@@ -778,81 +778,152 @@ export class TransactionExtractionService {
   private splitLineIntoTransactions(longLine: string): string[] {
     const transactions: string[] = [];
     
-    // Enhanced Bank of America transaction boundary patterns
+    // Modern Bank of America transaction boundary patterns (2023-2025 format)
+    // Based on actual BoA statement formats and transaction identifiers
     const boundaryPatterns = [
-      // CHECKCARD transactions - capture everything until next transaction type
-      /\b(CHECKCARD\s+\d{4}\s+[^C]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL\s+DES:|\s*Deel,\s+Inc\.|$)/g,
+      // Date-based splitting - Most reliable for 2023-2025 BoA format
+      // Matches MM/DD/YY or MM/DD/YYYY patterns followed by transaction data
+      /(\d{2}\/\d{2}\/\d{2,4}\s+[^\d\/]+?)(?=\d{2}\/\d{2}\/\d{2,4}|$)/g,
+      
+      // Transaction ID patterns (TRN: followed by transaction number)
+      /(TRN:\d{12}[^T]+?)(?=TRN:\d{12}|$)/g,
+      
+      // Electronic Transaction patterns with 4-digit codes
+      /(\d{4}\s+ET\s+TRN:\d{12}[^0-9]+?)(?=\d{4}\s+ET\s+TRN:|\d{2}\/\d{2}\/\d{2,4}|$)/g,
+      
+      // CHECKCARD transactions with terminal/location info
+      /(CHECKCARD\s+\d{4}(?:\s+\d{2}\/\d{2}\/\d{2})?\s+[^C]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL|\s*\d{2}\/\d{2}\/\d{2,4}|$)/g,
+      
       // PURCHASE transactions
-      /\b(PURCHASE\s+\d{4}\s+[^P]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL\s+DES:|\s*Deel,\s+Inc\.|$)/g,
-      // PAYPAL transactions
-      /\b(PAYPAL\s+DES:[^P]+?)(?=\s*PAYPAL\s+DES:|\s*CHECKCARD|\s*PURCHASE|\s*Deel,\s+Inc\.|$)/g,
-      // Deel transactions
-      /(Deel,\s+Inc\.\s+DES:[^D]+?)(?=\s*Deel,\s+Inc\.|\s*PAYPAL|\s*CHECKCARD|\s*AMERICAN\s+EXPRESS|$)/g,
-      // AMERICAN EXPRESS transactions
-      /(AMERICAN\s+EXPRESS\s+DES:[^A]+?)(?=\s*AMERICAN\s+EXPRESS|\s*CHECKCARD|\s*PURCHASE|\s*Card\s+account|$)/g,
-      // Wire transfers
-      /(WIRE\s+TYPE:[^W]+?)(?=\s*WIRE\s+TYPE:|\s*Zelle\s+Transfer|$)/g,
-      // Zelle transfers
-      /(Zelle\s+Transfer\s+Conf#[^;]+;[^Z]+?)(?=\s*Zelle\s+Transfer|\s*STRIPE|\s*WIRE\s+TYPE|$)/g,
-      // STRIPE transfers
-      /(STRIPE\s+DES:[^S]+?)(?=\s*STRIPE\s+DES:|\s*Zelle\s+Transfer|$)/g,
-      // Online Banking transfers
-      /(Online\s+Banking\s+transfer[^O]+?)(?=\s*Online\s+Banking\s+transfer|\s*PAYPAL|$)/g,
-      // RECURRING transactions
-      /(RECURRING\s+[^R]+?)(?=\s*RECURRING|\s*CHECKCARD|\s*PURCHASE|$)/g,
-      // PMNT SENT transactions
-      /(PMNT\s+SENT\s+[^P]+?)(?=\s*PMNT\s+SENT|\s*CHECKCARD|\s*PURCHASE|$)/g
+      /(PURCHASE\s+\d{4}(?:\s+\d{2}\/\d{2}\/\d{2})?\s+[^P]+?)(?=\s*CHECKCARD\s+\d{4}|\s*PURCHASE\s+\d{4}|\s*PAYPAL|\s*\d{2}\/\d{2}\/\d{2,4}|$)/g,
+      
+      // PAYPAL transactions with DES: descriptions
+      /(PAYPAL\s+(?:DES:|INST\s+XFER)?[^P]+?)(?=\s*PAYPAL\s+(?:DES:|INST\s+XFER)?|\s*CHECKCARD|\s*PURCHASE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/g,
+      
+      // Zelle Transfer patterns
+      /(ZELLE\s+TRANSFER\s+(?:CONF#|TO:|FROM:)[^Z]+?)(?=\s*ZELLE\s+TRANSFER|\s*CHECKCARD|\s*PURCHASE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Online Banking Transfer patterns
+      /(ONLINE\s+BANKING\s+TRANSFER[^O]+?)(?=\s*ONLINE\s+BANKING\s+TRANSFER|\s*ZELLE|\s*PAYPAL|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Wire Transfer patterns
+      /(WIRE\s+(?:TRANSFER|TYPE:)[^W]+?)(?=\s*WIRE\s+(?:TRANSFER|TYPE:)|\s*ZELLE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // ACH/Electronic patterns
+      /(ACH\s+(?:CREDIT|DEBIT)[^A]+?)(?=\s*ACH\s+(?:CREDIT|DEBIT)|\s*WIRE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // RECURRING CKCD (Recurring Check Card) patterns
+      /(RECURRING\s+CKCD[^R]+?)(?=\s*RECURRING\s+CKCD|\s*CHECKCARD|\s*PURCHASE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // CHECK patterns (physical checks)
+      /(CHECK\s+\d+[^C]+?)(?=\s*CHECK\s+\d+|\s*CHECKCARD|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // ATM patterns
+      /(ATM\s+(?:WITHDRAWAL|DEPOSIT)[^A]+?)(?=\s*ATM\s+(?:WITHDRAWAL|DEPOSIT)|\s*CHECKCARD|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Mobile deposit patterns
+      /(MOBILE\s+(?:DEPOSIT|CHECK\s+DEPOSIT)[^M]+?)(?=\s*MOBILE\s+(?:DEPOSIT|CHECK\s+DEPOSIT)|\s*ATM|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Fee patterns
+      /((?:MONTHLY|OVERDRAFT|ATM|WIRE)\s+FEE[^F]+?)(?=\s*(?:MONTHLY|OVERDRAFT|ATM|WIRE)\s+FEE|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Direct deposit patterns
+      /(DIRECT\s+(?:DEPOSIT|DEP)[^D]+?)(?=\s*DIRECT\s+(?:DEPOSIT|DEP)|\s*ACH|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // International transaction patterns
+      /(INTERNATIONAL\s+(?:TRANSACTION|PURCHASE)[^I]+?)(?=\s*INTERNATIONAL\s+(?:TRANSACTION|PURCHASE)|\s*CHECKCARD|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi,
+      
+      // Interest patterns
+      /(INTEREST\s+(?:PAID|EARNED)[^I]+?)(?=\s*INTEREST\s+(?:PAID|EARNED)|\s*\d{2}\/\d{2}\/\d{2,4}|$)/gi
     ];
     
-    let remainingText = longLine.trim();
     let processed = false;
     
-    // Try each pattern to extract transactions
-    for (const pattern of boundaryPatterns) {
-      pattern.lastIndex = 0;
-      let matches;
+    // Primary approach: Try date-based splitting first (most reliable)
+    const datePattern = /(\d{2}\/\d{2}\/\d{2,4})/g;
+    const dateMatches: RegExpExecArray[] = [];
+    let match;
+    while ((match = datePattern.exec(longLine)) !== null) {
+      dateMatches.push(match);
+    }
+    
+    if (dateMatches.length >= 2) {
+      let startIndex = 0;
       
-      while ((matches = pattern.exec(longLine)) !== null) {
-        const transaction = matches[1].trim();
-        if (transaction && transaction.length > 10) { // Minimum viable transaction length
-          transactions.push(transaction);
+      for (let i = 0; i < dateMatches.length; i++) {
+        const nextMatch = dateMatches[i + 1];
+        
+        let transactionText;
+        if (nextMatch) {
+          // Extract from current date to just before next date
+          transactionText = longLine.substring(startIndex, nextMatch.index).trim();
+        } else {
+          // Last transaction - extract to end
+          transactionText = longLine.substring(startIndex).trim();
+        }
+        
+        if (transactionText && transactionText.length > 15) {
+          transactions.push(transactionText);
           processed = true;
+        }
+        
+        if (nextMatch) {
+          startIndex = nextMatch.index;
         }
       }
     }
     
-    // If no patterns matched, try simpler splitting approaches
+    // Secondary approach: Try pattern-based splitting if date splitting didn't work
     if (!processed) {
-      // Look for date patterns that might indicate transaction starts
-      const datePattern = /\b(\d{4})\s+/g;
-      const dateSplits = longLine.split(datePattern);
+      for (const pattern of boundaryPatterns) {
+        pattern.lastIndex = 0;
+        let matches;
+        
+        while ((matches = pattern.exec(longLine)) !== null) {
+          const transaction = matches[1].trim();
+          if (transaction && transaction.length > 15) {
+            transactions.push(transaction);
+            processed = true;
+          }
+        }
+        
+        if (processed) break; // Use first successful pattern
+      }
+    }
+    
+    // Tertiary approach: Smart splitting on transaction keywords
+    if (!processed) {
+      const transactionKeywords = [
+        'CHECKCARD', 'PURCHASE', 'PAYPAL', 'ZELLE', 'WIRE', 'ACH', 'CHECK \\d+', 
+        'ATM', 'MOBILE', 'DIRECT', 'RECURRING', 'ONLINE BANKING', 'INTERNATIONAL'
+      ];
       
-      if (dateSplits.length > 2) {
-        // Recombine date with following text
-        for (let i = 1; i < dateSplits.length; i += 2) {
-          if (i + 1 < dateSplits.length) {
-            const possibleTransaction = dateSplits[i] + ' ' + dateSplits[i + 1];
-            if (possibleTransaction.trim().length > 20) {
-              transactions.push(possibleTransaction.trim());
+      const keywordPattern = new RegExp(`\\b(${transactionKeywords.join('|')})`, 'gi');
+      const parts = longLine.split(keywordPattern);
+      
+      if (parts.length > 3) { // At least 2 transactions
+        for (let i = 1; i < parts.length; i += 2) {
+          if (i + 1 < parts.length) {
+            const transaction = (parts[i] + ' ' + parts[i + 1]).trim();
+            if (transaction.length > 15) {
+              transactions.push(transaction);
+              processed = true;
             }
           }
         }
-        processed = true;
       }
     }
     
-    // Fallback: if nothing worked, return the original line but try to identify obvious breaks
+    // Final fallback: If nothing worked, return the original line
     if (!processed) {
-      // Look for obvious separators like card numbers or common keywords
-      const fallbackSplits = longLine.split(/\s+(?=(?:XXXX\s+XXXX|Card\s+account|Total\s+))/g);
-      if (fallbackSplits.length > 1) {
-        transactions.push(...fallbackSplits.filter(t => t.trim().length > 10));
-      } else {
-        transactions.push(longLine);
-      }
+      transactions.push(longLine);
     }
     
-    return transactions;
+    // Clean up and validate transactions
+    return transactions
+      .filter(t => t.trim().length > 10)
+      .map(t => t.trim())
+      .filter((t, index, arr) => arr.indexOf(t) === index); // Remove duplicates
   }
 
   /**

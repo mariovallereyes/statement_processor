@@ -17,8 +17,8 @@ import { bulkAnalysisValidator } from '../utils/BulkAnalysisValidator';
  */
 export class BulkTransactionClassificationService {
   private readonly GPT5_MINI_INPUT_LIMIT = 272000; // GPT-5 token limit
-  private readonly TOKENS_PER_TRANSACTION = 150; // Estimated tokens per transaction
-  private readonly CONTEXT_TOKEN_RESERVE = 20000; // Reserve tokens for context and prompt
+  private readonly TOKENS_PER_TRANSACTION = 50000; // Force 1 transaction per chunk
+  private readonly CONTEXT_TOKEN_RESERVE = 30000; // Larger reserve to force smaller chunks
   private readonly GPT5_MINI_INPUT_COST = 0.000075; // $0.075 per 1M tokens
   private readonly GPT5_MINI_OUTPUT_COST = 0.0003; // $0.30 per 1M tokens
 

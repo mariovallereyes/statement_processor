@@ -66,6 +66,9 @@ export class BulkAnalysisValidator {
       try {
         parsed = JSON.parse(responseContent);
       } catch (parseError) {
+        console.log('Original response content (first 1000 chars):', responseContent.substring(0, 1000));
+        console.log('Response length:', responseContent.length);
+        
         // Try to fix common JSON issues
         const fixedContent = this.attemptJsonFix(responseContent);
         try {

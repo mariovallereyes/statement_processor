@@ -43,8 +43,7 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
         body: JSON.stringify({
           model: 'gpt-5-mini',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.1,
-          max_tokens: 150
+          max_completion_tokens: 150
         })
       });
 
@@ -267,7 +266,8 @@ Respond with JSON: {"category": "category_name", "confidence": 0.95, "reasoning"
    */
   private generateCacheKey(transaction: Transaction): string {
     const key = `${transaction.description}-${transaction.amount}-${transaction.merchantName || ''}`;
-    return btoa(key).substring(0, 32); // Base64 encode and truncate
+    // Use encodeURIComponent to handle Unicode characters safely
+    return encodeURIComponent(key).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
   }
 
   /**
